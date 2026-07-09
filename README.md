@@ -15,6 +15,7 @@ Internal ERP + light MES for **LIMONÉ APPAREL**: raw-material inventory, produc
 | [docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md) | Admin dashboard architecture (React 19 + Vite + AntD 6 + Tailwind 4) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Design tokens (olive/cream), typography, AntD/Tailwind integration |
 | [docs/DESIGN_PROMPT.md](docs/DESIGN_PROMPT.md) | Prompt for generating UI mockups |
+| [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) | Tooling roadmap: logging, Swagger, Dozzle, BullMQ/Bull Board, Sentry, Grafana Loki — what we add and when |
 
 **Language policy:** English documents are canonical; `*_UZ.md` files are Uzbek translations, regenerated after substantial changes.
 
