@@ -1,0 +1,88 @@
+name: limone
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: limone-postgres
+    restart: unless-stopped
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Postgres 18 image moved the data volume: PGDATA=/var/lib/postgresql/18/docker,
+      # declared VOLUME is /var/lib/postgresql — mounting the old .../data path would
+      # leave data outside the volume.
+      - limone-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -q -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - limone
+
+  node:
+    image: node:24-alpine
+    container_name: limone-node
+    restart: unless-stopped
+    working_dir: /var/www
+    command: sh -c "npm install && npm run start:dev"
+    ports:
+      - '${PORT:-3000}:3000'
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www
+      # node_modules stays container-only: host (darwin/arm64) and container
+      # (linux/musl) need different native binaries (bcrypt etc.).
+      - limone-node-modules:/var/www/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - limone
+
+  nginx:
+    image: nginx:alpine
+    container_name: limone-nginx
+    restart: unless-stopped
+    ports:
+      - '${NGINX_PORT:-8080}:80'
+    volumes:
+      - ./infrastructure/docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - node
+    networks:
+      - limone
+
+  # DB inspection tool, started only on demand:
+  #   docker compose --profile tools up -d pgadmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: limone-pgadmin
+    profiles: [tools]
+    restart: unless-stopped
+    ports:
+      - '${PGADMIN_PORT:-5050}:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    volumes:
+      - limone-pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - limone
+
+networks:
+  limone:
+    driver: bridge
+
+volumes:
+  limone-postgres-data:
+  limone-pgadmin-data:
+  limone-node-modules:
