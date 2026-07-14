@@ -23,12 +23,25 @@ Internal ERP + light MES for **LIMONÉ APPAREL**: raw-material inventory, produc
 
 Nx monorepo (npm) · NestJS 11 · PostgreSQL 18 + TypeORM 1.0 · React 19 + Vite · Ant Design 6 + Tailwind CSS 4 · Zod (single validation source in `libs/shared`) · Node 24 LTS
 
-## Dev environment
+## Onboarding (fresh machine / new teammate)
+
+Everything needed ships with the repo — Claude skills (`.claude/skills/`),
+launch configs (`.claude/launch.json`), working rules (`CLAUDE.md`). Only
+Docker (+ Node.js for the IDE) must be installed on the machine.
 
 ```bash
-cp .env.example .env        # then replace every change-me (openssl rand -hex 32)
-docker compose up -d        # postgres + node (API) + nginx
+git clone <repo> && cd limone
+cp .env.example .env             # replace every change-me: openssl rand -hex 32
+npm install                      # host node_modules — for the IDE/ESLint only
+docker compose up -d             # postgres + node (API) + nginx
+docker compose exec node npm run migration:run
+curl http://localhost:8080      # expect the API response via nginx
 ```
+
+If a port is busy, adjust `NGINX_PORT` / `PORT` / `DB_PORT` in `.env`
+(compose picks them up on the next `docker compose up -d`).
+
+## Dev environment
 
 Fully containerized dev stack:
 
