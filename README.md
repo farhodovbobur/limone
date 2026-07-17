@@ -12,6 +12,7 @@ Internal ERP + light MES for **LIMONÉ APPAREL**: raw-material inventory, produc
 | [BUSINESS_PLAN.md](BUSINESS_PLAN.md) | The root plan: concept, design decisions, phased roadmap, data model, repo structure, open questions |
 | [docs/PHASE_0_FOUNDATION.md](docs/PHASE_0_FOUNDATION.md) | Phase 0 design (locked): auth, users, roles, sliding sessions |
 | [docs/PHASE_1_MATERIAL_WAREHOUSE.md](docs/PHASE_1_MATERIAL_WAREHOUSE.md) | Phase 1 design (draft): units, multi-currency ledger, receipts, issues, stocktake |
+| [docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md) | Locked API folder structure & conventions (feature modules, shared/, naming, rules) |
 | [docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md) | Admin dashboard architecture (React 19 + Vite + AntD 6 + Tailwind 4) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Design tokens (olive/cream), typography, AntD/Tailwind integration |
 | [docs/DESIGN_PROMPT.md](docs/DESIGN_PROMPT.md) | Prompt for generating UI mockups |

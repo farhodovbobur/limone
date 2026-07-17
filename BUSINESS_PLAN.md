@@ -51,7 +51,7 @@ Without it, "the workshop consumes material" is guesswork and stock drifts withi
 
 ## 4. Key design decisions
 
-These were chosen deliberately and shape the data model. Decisions 4.7–4.10 were locked in the July 2026 planning review.
+These were chosen deliberately and shape the data model. Decisions 4.7–4.11 were locked in the July 2026 planning review.
 
 **4.1 Material consumption — standard norma + actual.**
 Model consumption by norma (recipe-based, auto-deducted), **but also record actual consumption**. The gap between planned and actual surfaces waste and shrinkage — a real workshop problem.
@@ -94,6 +94,9 @@ When material leaves the warehouse (issued to production), its unit cost is the 
 
 **4.10 Production output has quality grades.**
 When a production order completes, the produced quantity is split into **grade A (good)** and **grade B (defective / brak)**. Both enter finished-goods stock, brak with its own grade flag — it can be sold at a discount, reworked, or written off. Brak cost shows up in statistics as **quality loss**. Defects are never silently ignored: they consumed real material.
+
+**4.11 Time policy — store UTC, display business time.**
+All timestamps are stored as `timestamptz` (UTC — the single absolute truth; integrations, logs, and JWT lifetimes align with it). The UI shows **business time (`Asia/Tashkent`) to every user regardless of their location** — a manager viewing from abroad sees the same 14:00 the workshop reported (single-site ERP policy, not viewer-local rendering). All daily/period aggregations group by the **business-timezone day**: `date(ts AT TIME ZONE 'Asia/Tashkent')` — otherwise evening operations (after 19:00 Tashkent) leak into the next UTC day. The zone lives in one config value (`APP_TIMEZONE`).
 
 ---
 
@@ -160,7 +163,7 @@ Quality is continuous; each phase ships **with** these, not before them:
 
 Money-typed fields below use the **Money pattern** of §4.7 (currency, amount, rate, frozen UZS+USD values).
 
-**Phase 0:** `User`, `Role` (enum), `RefreshToken`
+**Phase 0:** `User`, `Role` (seeded table + `RoleCode` enum hybrid — see PHASE_0 §5), `RefreshToken`
 
 **Phase 1:** `Unit` (code, name, dimension, factorToDimensionBase), `ExchangeRate` (date, rateUzsPerUsd, source), `Material` (canonical unit, per-material cross-dimension factors, minStock, cached avg cost UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (purchase document: supplier, currency, totalAmount, paidAmount), `MaterialTransaction` (IN/OUT/ADJUSTMENT ledger: material, qty in canonical unit, original qty+unit, unit cost as Money, refType, refId, date), `Stocktake` + `StocktakeLine`
 
@@ -284,6 +287,7 @@ One rule ("username ≥ 3 chars") exists in exactly one place; FE/BE drift is im
 | 2 | **Deploy target** — VPS vs cloud, hosting location, TLS, domain | End of Phase 1 (before first real data) |
 | 3 | **Supplier debt (payables)** — credit purchases ledger; door kept open via totalAmount/paidAmount on receipts (§4.4) | Phase 5+ or never |
 | 4 | **TypeScript 6 upgrade** — blocked on typescript-eslint support | When lint ecosystem allows |
+| 5 | **Role-creation UI + permissions model** — roles table ships seeded (system roles fixed); creating roles via UI needs DB-stored permissions first (PHASE_0 §13) | When dynamic roles are actually requested |
 
 ---
 

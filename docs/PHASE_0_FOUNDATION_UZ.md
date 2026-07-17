@@ -29,8 +29,8 @@ Faza 0 da yakuniy foydalanuvchi uchun biznes funksiyasi yo'q; uning qiymati — 
 
 **Qamrovdan tashqari (non-goals)**
 - Mijoz akkauntlari → Faza 5/6 (alohida `customers` jadvali)
-- Bir userda bir nechta rol / RBAC ruxsatlar jadvali → hozir emas (bitta enum, §3)
-- Dinamik, admin yaratadigan rollar → rollar qat'iy, seed qilingan enum
+- Bir userda bir nechta rol / RBAC ruxsatlar jadvali → hozir emas (bitta rol `users.role_id` orqali, §3)
+- Rol-yaratish UI → permissions modeli qurilguncha kechiktirilgan (§13); `roles` jadvali seed bilan keladi, tizim rollari qat'iy
 - Ishchining ish haqi/mahorat ma'lumoti → Faza 4 (alohida `employee` jadvali)
 - O'lchov birliklari va kategoriya spravochniklari → o'z fazalariga qoldiriladi (o'lchov birliklari Faza 1 — Material ombori bilan va h.k.). *Bu `BUSINESS_PLAN_UZ.md` §6 dagi eslatmani aniqlashtiradi.*
 - Xodimlar uchun ommaviy ro'yxatdan o'tish → xodim akkauntini admin yaratadi
@@ -43,7 +43,7 @@ Faza 0 da yakuniy foydalanuvchi uchun biznes funksiyasi yo'q; uning qiymati — 
 |---|-------|-------|
 | Q1 | Login **`username`** orqali (asosiy, unique, majburiy). `phone` va `email` **nullable**. | Sex xodimida username doim bor, email har doim emas; telefon ixtiyoriy aloqa sifatida. |
 | Q1 | Ism **`first_name` + `last_name`** alohida (bitta maydon emas). | Saralash, ko'rsatish va formatlash uchun toza. |
-| Q2 | **Bir userda bitta rol**, `enum` ustun. | Kichik sex; har kim bitta ish qiladi. M2M dan sodda; kerak bo'lsa keyin migratsiya (§13). |
+| Q2 | **Bir userda bitta rol** — `users.role_id` FK seed qilingan **`roles` jadvaliga** (yagona `name` ustuni = kalit + yorliq), kodda **`RoleCode` enum** bilan juft (gibrid). | Jadval: rollar bazada bir qarashda ko'rinadi, kelajak UI'ga tayyor. Enum: guard'lar compile-time xavfsizlikda (`@Roles(RoleCode.ADMIN)`). Har kimda bitta ish → oddiy FK, M2M emas. `code`/`is_system` yo'q — faqat FK himoya, rename to'silmagan (qabul qilingan kelishuv, §5). Rol-yaratish UI permissions modelini kutadi (§13). |
 | Q3 | **Xodim va mijoz alohida jadvallar**, keyin `customers.staff_user_id` orqali bog'lanadi. | Auth oqimi va maydonlar har xil; overlap bog'lovchi FK bilan. |
 | Q4 | `users` faqat **auth uchun**; ishchiga xos ma'lumot Faza 4 da alohida jadvalda. | `users`ni toza saqlaydi; ish haqi/mahorat maydonlari har bir akkauntga tegishli emas. |
 | Q5 | **Sliding sessiya (Variant B): qisqa access token + refresh token.** Faol user kirib turadi; `REFRESH_TOKEN_TTL` (2h) jim tursa → logout. | "Faol = cheksiz, jim = 2h" semantikasiga mos; sessiyani bekor qilish imkonini beradi (deaktivatsiya qilingan xodim chiqarib yuboriladi). |
@@ -58,10 +58,10 @@ Faza 0 da yakuniy foydalanuvchi uchun biznes funksiyasi yo'q; uning qiymati — 
 | `username` | varchar(50) | **unique, not null** | Login identifikatori |
 | `password_hash` | varchar | not null, **standart qaytarilmaydi** | bcrypt; javoblarда hech qachon ko'rinmaydi |
 | `first_name` | varchar(100) | not null | |
-| `last_name` | varchar(100) | not null | |
+| `last_name` | varchar(100) | nullable | Ixtiyoriy (ega qarori, 2026-07) |
 | `phone` | varchar(20) | nullable, unique | Normallashtirilgan, E.164 (masalan `+99890...`) |
 | `email` | varchar(150) | nullable, unique | Ixtiyoriy |
-| `role` | enum | not null | §5 ga qarang |
+| `role_id` | int | not null, FK → `roles.id` | §5 ga qarang |
 | `is_active` | boolean | not null, default `true` | O'chirish o'rniga deaktivatsiya |
 | `created_at` | timestamptz | not null, default now | |
 | `updated_at` | timestamptz | not null, auto | |
@@ -75,17 +75,32 @@ Izohlar:
 
 ## 5. Rollar
 
-Qat'iy, seed qilingan enum. Besh rol:
+Quyidagi besh rol bilan seed qilingan **`roles` jadvali** + kodda `RoleCode` enum jufti (guard'lar va avtorizatsiya matritsasi compile-time'da shunga tayanadi). **`name` — ham texnik kalit, ham ko'rsatma yorliq** (ega qarori, 2026-07): har doim `RoleCode` enum qiymatiga teng, UI'da shu holida ko'rinadi va **ishlatilgach hech qachon rename qilinmaydi** — rename o'sha rol egalarining avtorizatsiyasini jimgina sindiradi.
 
-| Kod | Nomi | Vazifasi |
-|-----|------|----------|
-| `admin` | Admin / Ega | To'liq kirish, sozlash, hisobotlar |
-| `warehouse_keeper` | Omborchi | Material va tayyor kiyim KIRIM/CHIQIM, qoldiq |
-| `workshop_manager` | Sex boshlig'i | Ishlab chiqarish, vazifa biriktirish, status |
-| `worker` | Tikuvchi | O'ziga berilgan vazifalarni ko'radi, holatini yangilaydi |
-| `sales` | Sotuvchi | Buyurtmalar, mijozlar, qoldiqni ko'rish |
+| Ustun | Tur | Izoh |
+|-------|-----|------|
+| `id` | int (serial) | PK |
+| `name` | varchar(50) | **unique** — `RoleCode` enum qiymatiga teng; ishlatilgach muzlatilgan |
+| `created_at` / `updated_at` | timestamptz | |
 
-Rol faqat **admin** tomonidan, user yaratish yoki tahrirlashda biriktiriladi/o'zgartiriladi.
+Himoya — **faqat FK** (`users.role_id → roles.id ON DELETE NO ACTION`): userlari bor rol o'chirilmaydi; usersiz rol o'chirilishi mumkin, rename esa DB darajasida to'silmagan — qabul qilingan kelishuv (`code`/`description`/`is_system` ustunlari ega qarori bilan yo'q).
+
+Seed qilinadigan rollar (ega qarori, 2026-07 — beshtadan sakkiztaga kengaytirildi):
+
+| Name (= enum qiymati) | Vazifasi |
+|-----------------------|----------|
+| `superadmin` | Admin'dan yuqori — ruxsatlari matritsada keyin ta'riflanadi (hozircha = admin) |
+| `admin` | To'liq kirish, sozlash, hisobotlar |
+| `director` | Ruxsatlari keyin ta'riflanadi (kutilma: barcha hisobotlarni o'qish) |
+| `warehouse_keeper` | Material va tayyor kiyim KIRIM/CHIQIM, qoldiq |
+| `workshop_manager` | Ishlab chiqarish, vazifa biriktirish, status |
+| `worker` | O'ziga berilgan vazifalarni ko'radi, holatini yangilaydi |
+| `sales` | Buyurtmalar, mijozlar, qoldiqni ko'rish |
+| `customer` | **Faza 6 uchun zaxira** — haqiqiy mijoz akkauntlari alohida `customers` jadvalida qoladi (Q3 o'zgarmagan); do'kon dizayni boshqacha hal qilmaguncha ishlatilmaydi |
+
+> `superadmin` / `director` / `customer` §6 matritsasida hali yo'q — semantikasi chindan kerak bo'lgan fazada ta'riflanadi.
+
+Rol faqat **admin** tomonidan, user yaratish yoki tahrirlashda biriktiriladi/o'zgartiriladi. Admin UI rollar **ro'yxatini** ko'rsatadi (faqat o'qish); UI'dan yangi rol yaratish permissions modeli qurilguncha kechiktirilgan (§13) — ungacha yangi rol hech narsaga ruxsat bermasdi.
 
 ---
 
@@ -132,6 +147,8 @@ Faza 0 da yagona himoyalangan resurs — **User boshqaruvi (faqat admin)**; matr
 
 **Logout** — `POST /api/auth/logout` joriy refresh tokenni bekor qiladi.
 
+**Kelajak mijozlar (mobil ilova va h.k.)** — o'sha bitta jadval har mijozga xizmat qiladi: `expires_at` qator darajasida, shuning uchun kelajak mobil ilova login'da shunchaki uzunroq sliding oyna oladi (masalan `MOBILE_REFRESH_TOKEN_TTL` = 60 kun — faol userga "amalda cheksiz", yo'qolgan qurilma o'zi o'ladi). Rotatsiya va reuse detection o'zgarishsiz ishlaydi; o'shanda "faol sessiyalar" ekrani uchun `client_type` ustuni qo'shiladi (`user_agent` allaqachon tayyorlab qo'yilgan). Sxemani qayta loyihalash kerak emas.
+
 **Parollar** — bcrypt bilan hash. User o'z parolini o'zgartira oladi; admin boshqa userning parolini tiklay oladi. Parol o'zgarsa/tiklansa, o'sha userning refresh tokenlari bekor qilinadi.
 
 **Birinchi admin** — seed skript (`npm run seed`) orqali, masalan `admin` / vaqtinchalik parol, roli `admin`. Birinchi kirishdan keyin parol o'zgartirilishi kerak.
@@ -161,7 +178,7 @@ Hammasi `/api` ostida.
 
 ## 9. Data model eskizi
 
-**Role enum** — bir marta `libs/shared`da e'lon qilinadi va `apps/api` ham, `apps/admin` ham import qiladi (hech qachon takrorlanmaydi):
+**`RoleCode` enum** — bir marta `libs/shared`da e'lon qilinadi va `apps/api` ham, `apps/admin` ham import qiladi (hech qachon takrorlanmaydi); qiymatlari `roles.code`ni aks ettiradi:
 ```
 ADMIN = 'admin'
 WAREHOUSE_KEEPER = 'warehouse_keeper'
@@ -172,18 +189,23 @@ SALES = 'sales'
 
 **DDL (namuna)**
 ```sql
-CREATE TYPE user_role AS ENUM
-  ('admin','warehouse_keeper','workshop_manager','worker','sales');
+CREATE TABLE roles (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(50)  NOT NULL UNIQUE,   -- RoleCode enum qiymatiga teng; muzlatilgan
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+-- migration ichida seed: admin, warehouse_keeper, workshop_manager, worker, sales
 
 CREATE TABLE users (
   id            SERIAL PRIMARY KEY,
   username      VARCHAR(50)  NOT NULL UNIQUE,
   password_hash VARCHAR      NOT NULL,
   first_name    VARCHAR(100) NOT NULL,
-  last_name     VARCHAR(100) NOT NULL,
+  last_name     VARCHAR(100),
   phone         VARCHAR(20)  UNIQUE,
   email         VARCHAR(150) UNIQUE,
-  role          user_role    NOT NULL,
+  role_id       INT          NOT NULL REFERENCES roles(id),  -- ON DELETE NO ACTION
   is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
@@ -202,7 +224,7 @@ CREATE TABLE refresh_tokens (
 );
 ```
 
-TypeORM'da bu `User` entity (`role` uchun `@Column({ type: 'enum', enum: Role })`, `password_hash` uchun `@Column({ select: false })`) va `User`ga `ManyToOne` bog'langan `RefreshToken` entity.
+TypeORM'da bu `Role` entity, `User` entity (`role_id` orqali `@ManyToOne(() => Role)`, `password_hash` uchun `@Column({ select: false })`) va `User`ga `ManyToOne` bog'langan `RefreshToken` entity. Access-token payload'ida avvalgidek rol **code** stringi yuradi (`user.role.code`dan).
 
 ---
 
@@ -217,6 +239,7 @@ TypeORM'da bu `User` entity (`role` uchun `@Column({ type: 'enum', enum: Role })
 - **Refresh tokenlar hashlangan saqlanadi** (xom emas) va har refreshда **rotatsiya** qilinadi; eskisi bekor qilinadi.
 - **Reuse detection:** allaqachon bekor qilingan refresh token kelsa (o'g'irlik ehtimoli), o'sha userning barcha refresh tokenlari bekor qilinadi.
 - **Deaktivatsiyaда bekor qilish:** `is_active = false` qilinsa, userning refresh tokenlari bekor qilinadi → u yangilab ololmaydi va bitta access TTL ichida (≤ 15m) chiqarib yuboriladi. Darhol uzish kerak bo'lsa, guard qo'shimcha ravishda `is_active`ni tekshirishi mumkin.
+- **Retention va tozalash:** qatorlar tirikligida o'zgarmas (tahrirlanmaydi), lekin abadiy saqlanmaydi — kunlik vazifa revoke qilingan yoki muddati o'tgan **va** `REFRESH_TOKEN_RETENTION_DAYS`dan (default 30) eski qatorlarni o'chiradi. Reuse detection faqat yaqin zanjir tarixiga muhtoj; jadval barqaror hajmda turadi (faol userga oyiga ~yuzlab qator).
 
 ---
 
@@ -250,8 +273,8 @@ Shuning uchun implementatsiya toza boshlanadi:
 
 ## 13. Kelajakdagi rivojlanish
 
-- **Bir nechta rol kerak bo'lsa?** `role` enum'ni `roles` jadvali + `user_roles` (M2M) ga migratsiya. Izolyatsiyalangan migratsiya; guard "rol bor" dan "kerakli rollardan biri bor" ga o'zgaradi.
-- **Granular ruxsatlar kerak bo'lsa?** `permissions` jadvali qo'shib, rollarni kodда emas, DB'da ruxsatlarga bog'lash.
+- **Bir nechta rol kerak bo'lsa?** Mavjud `roles` jadvali yoniga `user_roles` M2M qo'shiladi. Izolyatsiyalangan migratsiya; guard "rol bor" dan "kerakli rollardan biri bor" ga o'zgaradi.
+- **Granular ruxsatlar kerak bo'lsa?** `permissions` jadvali qo'shib, rollarni kodda emas, DB'da ruxsatlarga bog'lash. **Bu rol-yaratish UI'ni ham ochadi** (ungacha UI'dan yaratilgan rol hech narsaga ruxsat bermasdi — §5).
 - **Mijoz bilan yagona identity (SSO)?** Party/partner modeliga o'tish (bitta shaxs yozuvi, bir nechta persona). Faqat overlap kattalashsa.
 
 ---

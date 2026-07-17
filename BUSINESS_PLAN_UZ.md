@@ -52,7 +52,7 @@ Busiz "sex material ishlatadi" — taxminga aylanadi va ombor bir necha haftada 
 
 ## 4. Asosiy dizayn qarorlari
 
-Bular ataylab tanlangan va data modelni belgilaydi. 4.7–4.10 qarorlar 2026-iyul rejani ko'rib chiqishda qabul qilindi.
+Bular ataylab tanlangan va data modelni belgilaydi. 4.7–4.11 qarorlar 2026-iyul rejani ko'rib chiqishda qabul qilindi.
 
 **4.1 Material sarfi — norma + haqiqiy.**
 Sarfni norma bo'yicha modellaymiz (retsept asosida, avtomat rasxod), **lekin haqiqiy sarfni ham yozamiz**. Reja va fakt orasidagi farq isrof/kamomadni ko'rsatadi — sexlarda real muammo.
@@ -95,6 +95,9 @@ Material ombordan chiqqanda (sexga berilganda) uning birlik narxi — hozir ombo
 
 **4.10 Ishlab chiqarish natijasida sifat darajalari bor.**
 Ishlab chiqarish topshirig'i yakunlanganda chiqqan son ikkiga bo'linadi: **A daraja (yaroqli)** va **B daraja (nuqsonli / brak)**. Ikkalasi ham tayyor kiyim omboriga kiradi, brak o'z sifat belgisi bilan — uni chegirmali sotish, qayta ishlash yoki hisobdan chiqarish mumkin. Brak tannarxi statistikada **sifat yo'qotishi** sifatida ko'rinadi. Nuqsonlar hech qachon jimgina e'tibordan chetda qolmaydi: ular real material yutgan.
+
+**4.11 Vaqt siyosati — UTC'da saqlash, biznes vaqtida ko'rsatish.**
+Barcha vaqt belgilari `timestamptz` sifatida saqlanadi (UTC — yagona mutlaq haqiqat; integratsiyalar, loglar, JWT muddatlari shunga tekislanadi). UI esa **har foydalanuvchiga, qayerda bo'lishidan qat'i nazar, biznes vaqtini (`Asia/Tashkent`) ko'rsatadi** — chet eldan qaragan rahbar ham sex hisobot bergan o'sha 14:00 ni ko'radi (bir shaharlik ERP siyosati, tomoshabin-zonasi emas). Barcha kunlik/davriy agregatsiyalar **biznes-zona kuni** bo'yicha guruhlaydi: `date(ts AT TIME ZONE 'Asia/Tashkent')` — aks holda kechki (Toshkent 19:00 dan keyingi) operatsiyalar keyingi UTC kunga oqib o'tadi. Zona bitta config qiymatida yashaydi (`APP_TIMEZONE`).
 
 ---
 
@@ -161,7 +164,7 @@ Sifat uzluksiz; har faza bularni **bilan birga** topshiradi, ulardan keyin emas:
 
 Quyidagi pul tipidagi maydonlar §4.7 dagi **Money pattern**dan foydalanadi (valyuta, summa, kurs, muhrlangan UZS+USD qiymatlar).
 
-**Faza 0:** `User`, `Role` (enum), `RefreshToken`
+**Faza 0:** `User`, `Role` (seed qilingan jadval + `RoleCode` enum gibridi — PHASE_0 §5 ga qarang), `RefreshToken`
 
 **Faza 1:** `Unit` (kod, nom, dimension, factorToDimensionBase), `ExchangeRate` (sana, rateUzsPerUsd, manba), `Material` (kanonik birlik, material darajasidagi o'lchamlararo koeffitsiyentlar, minStock, keshlangan o'rtacha tannarx UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (xarid hujjati: yetkazib beruvchi, valyuta, totalAmount, paidAmount), `MaterialTransaction` (KIRIM/CHIQIM/ADJUSTMENT daftari: material, kanonik birlikdagi miqdor, asl miqdor+birlik, Money ko'rinishidagi birlik narx, refType, refId, sana), `Stocktake` + `StocktakeLine`
 
@@ -285,6 +288,7 @@ Bitta qoida ("username ≥ 3 belgi") aynan bitta joyda mavjud; FE/BE drift konst
 | 2 | **Deploy nishoni** — VPS yoki cloud, hosting joyi, TLS, domen | Faza 1 oxiri (birinchi real ma'lumotdan oldin) |
 | 3 | **Yetkazib beruvchiga qarz (kreditorka)** — nasiya xarid daftari; xarid hujjatidagi totalAmount/paidAmount orqali eshik ochiq (§4.4) | Faza 5+ yoki hech qachon |
 | 4 | **TypeScript 6 ga o'tish** — typescript-eslint qo'llab-quvvatlashiga bog'liq | Lint ekotizimi ruxsat berganda |
+| 5 | **Rol-yaratish UI + permissions modeli** — roles jadvali seed bilan keladi (tizim rollari qat'iy); UI'dan rol yaratish avval bazada saqlanadigan ruxsatlarni talab qiladi (PHASE_0 §13) | Dinamik rollar chindan so'ralganda |
 
 ---
 

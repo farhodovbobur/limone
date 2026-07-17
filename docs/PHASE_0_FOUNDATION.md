@@ -29,8 +29,8 @@ Phase 0 has no end-user business feature; its value is that nothing else can be 
 
 **Out of scope (non-goals)**
 - Customer accounts → Phase 5/6 (separate `customers` table)
-- Multiple roles per user / RBAC permissions table → not now (single enum, see §3)
-- Dynamic, admin-created roles → roles are a fixed, seeded enum
+- Multiple roles per user / RBAC permissions table → not now (single role via `users.role_id`, see §3)
+- Role-creation UI → deferred until a permissions model exists (§13); the `roles` table ships seeded, system roles are fixed
 - Worker wage/skill profile data → Phase 4 (separate `employee` table)
 - Units of measure & category reference data → deferred to their owning phases (units with Material warehouse in Phase 1, etc.). *This refines the earlier note in `BUSINESS_PLAN.md` §6.*
 - Public/self-registration for staff → staff accounts are created by an admin
@@ -43,7 +43,7 @@ Phase 0 has no end-user business feature; its value is that nothing else can be 
 |---|----------|-----------|
 | Q1 | Login by **`username`** (primary, unique, required). `phone` and `email` are **nullable**. | Workshop staff reliably have a username, not always email; phone optional as contact. |
 | Q1 | Name stored as **`first_name` + `last_name`** (not a single field). | Cleaner for sorting, display, and future formatting. |
-| Q2 | **One role per user**, stored as an `enum` column. | Small workshop; each person has one job. Simpler than M2M; can migrate later if needed (§13). |
+| Q2 | **One role per user** via `users.role_id` FK to a seeded **`roles` table** (single `name` column = key + label), paired with a **`RoleCode` enum** in code (hybrid). | Table: roles visible in the DB at a glance, ready for future UI. Enum: guards keep compile-time safety (`@Roles(RoleCode.ADMIN)`). One job per person → plain FK, not M2M. No `code`/`is_system` — FK-only protection, renames unblocked (accepted trade-off, §5). Role-creation UI waits for a permissions model (§13). Multi-role migration path unchanged (§13). |
 | Q3 | **Staff and customers are separate tables**, linked later via `customers.staff_user_id`. | Different auth flows, different attributes; overlap handled by a link FK. |
 | Q4 | `users` stays **auth-only**; worker-specific data lives in a separate table in Phase 4. | Keeps `users` clean; wage/skill fields don't belong on every staff account. |
 | Q5 | **Sliding session (Variant B): short access token + refresh token.** Active user stays logged in; inactive for `REFRESH_TOKEN_TTL` (2h) → logged out. | Matches "active = unlimited, idle = 2h"; enables session revocation (deactivated staff are kicked out). |
@@ -58,10 +58,10 @@ Phase 0 has no end-user business feature; its value is that nothing else can be 
 | `username` | varchar(50) | **unique, not null** | Login identifier |
 | `password_hash` | varchar | not null, **not selected by default** | bcrypt; never returned in API responses |
 | `first_name` | varchar(100) | not null | |
-| `last_name` | varchar(100) | not null | |
+| `last_name` | varchar(100) | nullable | Optional (owner decision, 2026-07) |
 | `phone` | varchar(20) | nullable, unique | Stored normalized, E.164 (e.g. `+99890...`) |
 | `email` | varchar(150) | nullable, unique | Optional |
-| `role` | enum | not null | See §5 |
+| `role_id` | int | not null, FK → `roles.id` | See §5 |
 | `is_active` | boolean | not null, default `true` | Deactivate instead of deleting |
 | `created_at` | timestamptz | not null, default now | |
 | `updated_at` | timestamptz | not null, auto | |
@@ -75,17 +75,32 @@ Notes:
 
 ## 5. Roles
 
-A fixed, seeded enum. Five roles:
+A **`roles` table** seeded with the five roles below, paired with a `RoleCode` enum in code that guards and the authorization matrix reference at compile time. **`name` is both the technical key and the display label** (owner decision, 2026-07): it always equals a `RoleCode` enum value, is shown in the UI as-is, and **must never be renamed once referenced** — a rename would silently break authorization for that role's users.
 
-| Code | Name (UZ) | Responsibility |
-|------|-----------|----------------|
-| `admin` | Admin / Ega | Full access, configuration, reports |
-| `warehouse_keeper` | Omborchi | Material & finished-goods IN/OUT, stock |
-| `workshop_manager` | Sex boshlig'i | Production orders, task assignment, status |
-| `worker` | Tikuvchi | Sees own assigned tasks, updates their status |
-| `sales` | Sotuvchi | Orders, customers, stock lookup |
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | int (serial) | PK |
+| `name` | varchar(50) | **unique** — equals a `RoleCode` enum value; frozen once referenced |
+| `created_at` / `updated_at` | timestamptz | |
 
-Role is assigned/changed **only by an admin** when creating or editing a user.
+Protection is **FK-only** (`users.role_id → roles.id ON DELETE NO ACTION`): a role that has users cannot be deleted; a role **without** users can be, and renames are not blocked at the DB level — accepted trade-off (no `code`/`description`/`is_system` columns by owner decision).
+
+The seeded roles (owner decision, 2026-07 — expanded from five to eight):
+
+| Name (= enum value) | Responsibility |
+|---------------------|----------------|
+| `superadmin` | Above admin — permissions to be defined in the matrix (currently = admin) |
+| `admin` | Full access, configuration, reports |
+| `director` | Permissions to be defined (expected: read-all reports) |
+| `warehouse_keeper` | Material & finished-goods IN/OUT, stock |
+| `workshop_manager` | Production orders, task assignment, status |
+| `worker` | Sees own assigned tasks, updates their status |
+| `sales` | Orders, customers, stock lookup |
+| `customer` | **Reserved for Phase 6** — actual customer accounts stay in the separate `customers` table (Q3 unchanged); this value is not used until the storefront design decides otherwise |
+
+> `superadmin` / `director` / `customer` are not yet rows in the §6 authorization matrix — their semantics are defined when a phase actually needs them.
+
+Role is assigned/changed **only by an admin** when creating or editing a user. The admin UI shows the roles **list** (read-only); creating new roles via UI is deferred until a permissions model exists (§13) — until then a new role would grant nothing.
 
 ---
 
@@ -132,6 +147,8 @@ In Phase 0 the only protected resource is **User management (admin only)**; the 
 
 **Logout** — `POST /api/auth/logout` revokes the current refresh token.
 
+**Future clients (mobile app etc.)** — the same table serves every client: `expires_at` is per-row, so a future mobile app simply gets a longer sliding window at login (e.g. `MOBILE_REFRESH_TOKEN_TTL` = 60d — "practically infinite" for an active user, dead device dies on its own). Rotation and reuse detection apply unchanged; add a `client_type` column then for an "active sessions" screen (`user_agent` already prepares for it). No schema redesign needed.
+
 **Passwords** — hashed with bcrypt. A user can change their own password; an admin can reset another user's. Changing/resetting a password revokes that user's refresh tokens.
 
 **First admin** — created by a seed script (`npm run seed`), e.g. `admin` / temporary password, role `admin`. Password must be changed after first login.
@@ -161,7 +178,7 @@ All under `/api`.
 
 ## 9. Data model sketch
 
-**Role enum** — defined once in `libs/shared` and imported by both `apps/api` and `apps/admin` (never duplicated):
+**`RoleCode` enum** — defined once in `libs/shared` and imported by both `apps/api` and `apps/admin` (never duplicated); values mirror `roles.code`:
 ```
 ADMIN = 'admin'
 WAREHOUSE_KEEPER = 'warehouse_keeper'
@@ -172,18 +189,23 @@ SALES = 'sales'
 
 **DDL (illustrative)**
 ```sql
-CREATE TYPE user_role AS ENUM
-  ('admin','warehouse_keeper','workshop_manager','worker','sales');
+CREATE TABLE roles (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(50)  NOT NULL UNIQUE,   -- equals a RoleCode enum value; frozen
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+-- seeded in the migration: admin, warehouse_keeper, workshop_manager, worker, sales
 
 CREATE TABLE users (
   id            SERIAL PRIMARY KEY,
   username      VARCHAR(50)  NOT NULL UNIQUE,
   password_hash VARCHAR      NOT NULL,
   first_name    VARCHAR(100) NOT NULL,
-  last_name     VARCHAR(100) NOT NULL,
+  last_name     VARCHAR(100),
   phone         VARCHAR(20)  UNIQUE,
   email         VARCHAR(150) UNIQUE,
-  role          user_role    NOT NULL,
+  role_id       INT          NOT NULL REFERENCES roles(id),  -- ON DELETE NO ACTION
   is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
@@ -202,7 +224,7 @@ CREATE TABLE refresh_tokens (
 );
 ```
 
-In TypeORM this maps to a `User` entity (`@Column({ type: 'enum', enum: Role })` for `role`, `@Column({ select: false })` for `password_hash`) and a `RefreshToken` entity with a `ManyToOne` to `User`.
+In TypeORM this maps to a `Role` entity, a `User` entity (`@ManyToOne(() => Role)` via `role_id`, `@Column({ select: false })` for `password_hash`) and a `RefreshToken` entity with a `ManyToOne` to `User`. The access-token payload keeps carrying the role **code** string (from `user.role.code`).
 
 ---
 
@@ -217,6 +239,7 @@ In TypeORM this maps to a `User` entity (`@Column({ type: 'enum', enum: Role })`
 - **Refresh tokens are stored hashed** (never raw) and **rotated** on every refresh; the old one is revoked.
 - **Reuse detection:** if an already-revoked refresh token is presented (possible theft), revoke all of that user's refresh tokens.
 - **Revocation on deactivation:** setting `is_active = false` revokes the user's refresh tokens → they cannot refresh and are logged out within one access-token TTL (≤ 15m). For immediate cut-off, the guard may additionally check `is_active`.
+- **Retention & cleanup:** rows are immutable while alive (never edited), but not kept forever — a daily job deletes rows that are revoked or expired **and** older than `REFRESH_TOKEN_RETENTION_DAYS` (default 30). Reuse detection only needs recent chain history; the table stays at a steady size (~hundreds of rows per active user per month).
 
 ---
 
@@ -243,15 +266,15 @@ In TypeORM this maps to a `User` entity (`@Column({ type: 'enum', enum: Role })`
 Implementation therefore starts clean:
 
 1. Restructure the scaffold into the Nx workspace (`apps/api`, `apps/admin`, `libs/shared`) per `BUSINESS_PLAN.md` §9.
-2. Build Phase 0 inside `apps/api` exactly as specified here: username login, access + refresh tokens (Variant B), `refresh_tokens` table, admin-created accounts only (no public register), env vars `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL`.
+2. Build Phase 0 inside `apps/api` exactly as specified here: username login, access + refresh tokens (Variant B), `refresh_tokens` table, seeded `roles` table + `RoleCode` enum (hybrid, §5), admin-created accounts only (no public register), env vars `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL`.
 3. Domain modules (materials, models, BOM, production, orders) are modeled from Phase 1 onward — no generic Products/Categories CRUD.
 
 ---
 
 ## 13. Future evolution
 
-- **Multiple roles needed?** Migrate the `role` enum to a `roles` table + `user_roles` (M2M). Isolated migration; guards change from "has role" to "has any required role".
-- **Granular permissions?** Add a `permissions` table and map roles → permissions in the DB instead of in code.
+- **Multiple roles needed?** Add a `user_roles` M2M junction next to the existing `roles` table. Isolated migration; guards change from "has role" to "has any required role".
+- **Granular permissions?** Add a `permissions` table and map roles → permissions in the DB instead of in code. **This also unlocks the role-creation UI** (until then, a UI-created role would grant nothing — see §5).
 - **Unified identity with customers (SSO)?** Move to a party/partner model (one person record, multiple personas). Only if overlap grows large.
 
 ---
