@@ -15,7 +15,9 @@ export class CreateRolesTable1784270527211 implements MigrationInterface {
       )`,
     );
 
-    await queryRunner.query(`INSERT INTO "roles" ("name") VALUES ('superadmin'), ('admin'), ('director'), ('warehouse_keeper'), ('workshop_manager'), ('worker'), ('sales'), ('customer')`);
+    await queryRunner.query(
+      `INSERT INTO "roles" ("name") VALUES ('superadmin'), ('admin'), ('director'), ('warehouse_keeper'), ('workshop_manager'), ('worker'), ('sales'), ('customer')`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

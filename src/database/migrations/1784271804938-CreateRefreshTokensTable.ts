@@ -18,9 +18,15 @@ export class CreateRefreshTokensTable1784271804938 implements MigrationInterface
           CONSTRAINT "PK_7d8bee0204106019488c4c50ffa" PRIMARY KEY ("id")
       )`,
     );
-    await queryRunner.query(`CREATE INDEX "IDX_a7838d2ba25be1342091b6695f" ON "refresh_tokens" ("token_hash")`);
-    await queryRunner.query(`ALTER TABLE "refresh_tokens" ADD CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-    await queryRunner.query(`ALTER TABLE "refresh_tokens" ADD CONSTRAINT "FK_444f2e9fbaaba23a2bfb7efd8d7" FOREIGN KEY ("replaced_by") REFERENCES "refresh_tokens"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_a7838d2ba25be1342091b6695f" ON "refresh_tokens" ("token_hash")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "refresh_tokens" ADD CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "refresh_tokens" ADD CONSTRAINT "FK_444f2e9fbaaba23a2bfb7efd8d7" FOREIGN KEY ("replaced_by") REFERENCES "refresh_tokens"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
