@@ -17,7 +17,7 @@ const ACCOUNTS = [
   {
     username: 'admin',
     firstName: 'Admin',
-    role: RoleCode.ADMIN
+    role: RoleCode.ADMIN,
   },
 ];
 
