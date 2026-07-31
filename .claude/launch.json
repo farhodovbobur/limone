@@ -18,6 +18,12 @@
       "runtimeExecutable": "docker",
       "runtimeArgs": ["compose", "--profile", "tools", "up", "pgadmin"],
       "port": 5050
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "admin"],
+      "port": 4200
     }
   ]
 }
