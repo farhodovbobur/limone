@@ -25,7 +25,7 @@ Mijoz uchun storefront (Faza 6) ataylab **bu yerда qamrovdan tashqari** — u 
 | Framework | **Vite + React 19 + TypeScript** (SPA) | Ichki tool — SSR/SEO kerak emas; eng sodda, tez; NestJS API'dan toza ajralgan. Eng so'nggi: Vite 8.x, React 19.x |
 | UI kutubxona | **Ant Design (v6)** | Tayyor Table/Form/DatePicker — ERP CRUD uchun ideal. v6 (2025 noyabrdan barqaror, eng so'nggi 6.4.x) React 18/19 ni qo'llaydi; v5→v6 migratsiya silliq |
 | Styling | **Tailwind CSS v4** (utility-first) | Layout, bo'shliq, custom komponentlar. CSS-first config (`@theme`), `@tailwindcss/vite` plagini. AntD tokenlari bilan bitta palitrani bo'lishadi. `DESIGN_SYSTEM_UZ.md` §8 ga qarang |
-| Routing | **React Router (v6)** | Standart SPA routing |
+| Routing | **React Router (v8, deklarativ rejim)** | Standart SPA routing. 2026-08-03 da v6 → v8 ko'tarildi: open-redirect CVE tuzatishlari (GHSA-wrjc-x8rr-h8h6 va b.) faqat v7.18+/v8 da chiqqan, v6 ga backport qilinmagan; bizning deklarativ API yuzamiz (`BrowserRouter/Routes/Route/useNavigate`) o'zgarmagan. Import `react-router` dan — v8 da `react-router-dom` paketi yo'q. Router state'dan kelgan redirect manzillari `shared/safePath.ts` orqali o'tadi |
 | Server state | **TanStack Query (React Query)** | Kesh, refetch, mutatsiya — state'ning ~90% ini qoplaydi |
 | Client/UI state | **Zustand** (yengil) | Minimal: auth/sessiya, UI sozlamalari. Redux yo'q |
 | HTTP klient | **Axios** | JWT biriktirish + 401 boshqaruvi uchun interceptor |

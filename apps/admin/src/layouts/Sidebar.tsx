@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import logo from '../assets/logos/limone-logo.svg';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { isAdminOnly, type Role } from '../shared/access';

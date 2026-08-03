@@ -2,7 +2,7 @@ import { StyleProvider } from '@ant-design/cssinjs';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { App as AntApp, ConfigProvider } from 'antd';
 import type { ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 import { queryClient } from './queryClient';
 import { theme } from './theme';

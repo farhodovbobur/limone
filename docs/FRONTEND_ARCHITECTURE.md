@@ -25,7 +25,7 @@ The customer-facing storefront (Phase 6) is intentionally **out of scope here** 
 | Framework | **Vite + React 19 + TypeScript** (SPA) | Internal tool — no SSR/SEO need; simplest, fastest; clean separation from NestJS API. Latest: Vite 8.x, React 19.x |
 | UI library | **Ant Design (v6)** | Rich Table/Form/DatePicker out of the box — ideal for ERP CRUD. v6 (stable since Nov 2025, latest 6.4.x) supports React 18/19; smooth migration from v5 |
 | Styling | **Tailwind CSS v4** (utility-first) | Layout, spacing, custom components. CSS-first config (`@theme`), `@tailwindcss/vite` plugin. Shares one palette with AntD tokens. See `DESIGN_SYSTEM.md` §8 |
-| Routing | **React Router (v6)** | Standard SPA routing |
+| Routing | **React Router (v8, declarative mode)** | Standard SPA routing. Upgraded v6 → v8 on 2026-08-03: the open-redirect CVE fixes (GHSA-wrjc-x8rr-h8h6 et al.) ship only in v7.18+/v8 and were not backported to v6; our declarative API surface (`BrowserRouter/Routes/Route/useNavigate`) is unchanged. Import from `react-router` — the `react-router-dom` package is gone in v8. Redirect targets from router state go through `shared/safePath.ts` |
 | Server state | **TanStack Query (React Query)** | Caching, refetch, mutations — covers ~90% of state needs |
 | Client/UI state | **Zustand** (light) | Minimal: auth/session, UI prefs. No Redux |
 | HTTP client | **Axios** | Interceptors for JWT attach + 401 handling |

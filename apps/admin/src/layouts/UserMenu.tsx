@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Dropdown } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { authApi } from '../features/auth/api/authApi';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { Avatar } from '../shared/components/Avatar';
