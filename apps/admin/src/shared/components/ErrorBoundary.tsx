@@ -1,6 +1,6 @@
 import { Button } from 'antd';
 import { Icons } from '../icons';
-import { Component, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export class ErrorBoundary extends Component<
@@ -11,6 +11,10 @@ export class ErrorBoundary extends Component<
 
   static getDerivedStateFromError() {
     return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info.componentStack);
   }
 
   render() {

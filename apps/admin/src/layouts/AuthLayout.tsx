@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { LangSwitch } from '../shared/components/LangSwitch';
 
 export function AuthLayout() {
+  useEffect(() => {
+    document.title = 'LIMONÉ Admin';
+  }, []);
+
   return (
     <div
       className="relative flex min-h-screen items-center justify-center overflow-hidden p-8"

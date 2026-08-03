@@ -62,7 +62,7 @@ api.interceptors.response.use(
       return api(original);
     } catch {
       useAuthStore.getState().clearSession();
-      window.location.assign('/login');
+      window.location.assign('/login?reason=expired');
       throw error;
     }
   },

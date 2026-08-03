@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Icons } from '../shared/icons';
@@ -36,10 +37,17 @@ export function Breadcrumbs({ className }: { className?: string }) {
   const navigate = useNavigate();
   const crumbs = crumbsFor(location.pathname);
 
+  const title = crumbs.map((c) => t(c.labelKey)).join(' · ');
+  useEffect(() => {
+    if (title) document.title = `${title} — LIMONÉ Admin`;
+  }, [title]);
+
   const canGoBack =
     ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
   const upPath = crumbs.find((c) => c.path)?.path;
   const backDisabled = !canGoBack && !upPath && location.pathname === '/';
+
+  if (crumbs.length === 0) return null;
 
   return (
     <div className={`flex items-center gap-2 ${className ?? ''}`}>

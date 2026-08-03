@@ -19,6 +19,7 @@ export function LangSwitch({ withIcon = false }: { withIcon?: boolean }) {
         <button
           key={l}
           type="button"
+          aria-pressed={current === l}
           onClick={() => void i18n.changeLanguage(l)}
           className={`h-6 rounded-md px-2.5 text-xs font-medium u-focus transition-colors ${
             current === l

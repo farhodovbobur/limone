@@ -20,7 +20,10 @@
     "crashTitle": "Kutilmagan xatolik yuz berdi",
     "reload": "Sahifani yangilash",
     "breadcrumb": "Navigatsiya yo'li",
-    "back": "Orqaga"
+    "back": "Orqaga",
+    "deniedTitle": "Ruxsat yo'q",
+    "deniedBody": "Bu bo'lim sizning rolingiz uchun ochiq emas. Xato deb o'ylasangiz, administratorga murojaat qiling.",
+    "deniedCta": "Boshqaruv paneliga qaytish"
   },
   "login": {
     "welcome": "Hisobingizga kiring",
@@ -37,7 +40,8 @@
     "validation": {
       "usernameMin": "Kamida 3 ta belgi",
       "passwordMin": "Kamida 3 ta belgi"
-    }
+    },
+    "sessionExpired": "Sessiya muddati tugadi. Qaytadan kiring."
   },
   "staff": {
     "title": "Xodimlar",

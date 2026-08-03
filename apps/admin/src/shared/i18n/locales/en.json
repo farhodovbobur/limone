@@ -20,7 +20,10 @@
     "crashTitle": "Something went wrong",
     "reload": "Reload page",
     "breadcrumb": "Breadcrumb",
-    "back": "Back"
+    "back": "Back",
+    "deniedTitle": "Access denied",
+    "deniedBody": "This section isn't available for your role. If you think this is a mistake, contact an administrator.",
+    "deniedCta": "Back to dashboard"
   },
   "login": {
     "welcome": "Sign in to your account",
@@ -37,7 +40,8 @@
     "validation": {
       "usernameMin": "At least 3 characters",
       "passwordMin": "At least 3 characters"
-    }
+    },
+    "sessionExpired": "Your session has expired. Please sign in again."
   },
   "staff": {
     "title": "Staff",
