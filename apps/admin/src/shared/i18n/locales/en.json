@@ -1,0 +1,130 @@
+{
+  "brand": {
+    "name": "LIMONÉ",
+    "tagline": "APPAREL"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "staff": "Staff",
+    "orders": "Orders",
+    "reports": "Reports"
+  },
+  "shell": {
+    "navSection": "Modules",
+    "adminOnly": "Admin only",
+    "profile": "My profile",
+    "settings": "Settings",
+    "logout": "Log out",
+    "notif": "Notifications",
+    "soonBody": "This module slots into the same layout in a later phase. The shell is already in place.",
+    "crashTitle": "Something went wrong",
+    "reload": "Reload page",
+    "breadcrumb": "Breadcrumb",
+    "back": "Back"
+  },
+  "login": {
+    "welcome": "Sign in to your account",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "signingIn": "Signing in…",
+    "forgot": "Forgot password?",
+    "note": "Sign in with your username, not email.",
+    "foot": "Internal management system · staff only",
+    "invalidCredentials": "Invalid username or password",
+    "serverError": "Could not reach the server. Please try again.",
+    "placeholderUsername": "Enter your username",
+    "validation": {
+      "usernameMin": "At least 3 characters",
+      "passwordMin": "At least 3 characters"
+    }
+  },
+  "staff": {
+    "title": "Staff",
+    "lead": "Manage system users — roles, access and status. Admin-only screen.",
+    "search": "Search by name or username",
+    "allRoles": "All roles",
+    "add": "Add staff",
+    "th": {
+      "name": "Name",
+      "username": "Username",
+      "role": "Role",
+      "phone": "Phone",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "showing": "Showing {{from}}–{{to}} of {{total}} staff",
+    "emptyTitle": "No staff found",
+    "emptyBody": "No staff match your search or filter. Try adjusting the criteria or add someone new.",
+    "clearFilters": "Clear filters",
+    "errTitle": "Couldn't load data",
+    "errBody": "Something went wrong connecting to the server. Please try again.",
+    "retry": "Retry",
+    "created": "{{name}} added",
+    "saved": "{{name}} saved",
+    "deactivated": "{{name}} deactivated",
+    "activated": "{{name}} activated"
+  },
+  "drawer": {
+    "addTitle": "New staff member",
+    "addSub": "Add a new user to the system.",
+    "editTitle": "Edit staff member",
+    "editSub": "Update this user's details.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "optional": "optional",
+    "selectRole": "Select a role",
+    "activeTitle": "Active account",
+    "activeSub": "A deactivated user can't sign in.",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "create": "Add staff",
+    "pwHint": "At least 8 characters.",
+    "vRequired": "This field is required",
+    "vUserTaken": "Username is taken",
+    "vUserShort": "At least 3 characters",
+    "vPhone": "Invalid phone number",
+    "vEmail": "Invalid email",
+    "vPwShort": "Password is too short",
+    "conflict": "Username, phone or email already in use"
+  },
+  "dashboard": {
+    "greeting": "Good day, {{name}}!"
+  },
+  "cp": {
+    "title": "Change password",
+    "lead": "After setting a new password all sessions end and you sign in again.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "New password (repeat)",
+    "submit": "Update password",
+    "success": "Password updated. Please sign in again.",
+    "wrongCurrent": "Current password is incorrect",
+    "vMismatch": "Passwords do not match"
+  },
+  "roles": {
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "director": "Director",
+    "warehouse_keeper": "Warehouse keeper",
+    "workshop_manager": "Workshop manager",
+    "worker": "Worker",
+    "sales": "Sales",
+    "customer": "Customer"
+  },
+  "crumb": {
+    "list": "List",
+    "create": "Create",
+    "edit": "Edit",
+    "view": "View"
+  }
+}

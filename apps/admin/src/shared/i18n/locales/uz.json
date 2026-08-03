@@ -1,0 +1,130 @@
+{
+  "brand": {
+    "name": "LIMONÉ",
+    "tagline": "APPAREL"
+  },
+  "nav": {
+    "dashboard": "Boshqaruv paneli",
+    "staff": "Xodimlar",
+    "orders": "Buyurtmalar",
+    "reports": "Hisobotlar"
+  },
+  "shell": {
+    "navSection": "Modullar",
+    "adminOnly": "Faqat admin",
+    "profile": "Mening profilim",
+    "settings": "Sozlamalar",
+    "logout": "Chiqish",
+    "notif": "Bildirishnomalar",
+    "soonBody": "Bu modul keyingi bosqichda ushbu interfeysga qo'shiladi. Tuzilma allaqachon tayyor.",
+    "crashTitle": "Kutilmagan xatolik yuz berdi",
+    "reload": "Sahifani yangilash",
+    "breadcrumb": "Navigatsiya yo'li",
+    "back": "Orqaga"
+  },
+  "login": {
+    "welcome": "Hisobingizga kiring",
+    "username": "Login",
+    "password": "Parol",
+    "submit": "Kirish",
+    "signingIn": "Kirilmoqda…",
+    "forgot": "Parolni unutdingizmi?",
+    "note": "Tizimga email emas, login orqali kiriladi.",
+    "foot": "Ichki boshqaruv tizimi · faqat xodimlar uchun",
+    "invalidCredentials": "Login yoki parol noto'g'ri",
+    "serverError": "Server bilan bog'lanib bo'lmadi. Qayta urinib ko'ring.",
+    "placeholderUsername": "Loginni kiriting",
+    "validation": {
+      "usernameMin": "Kamida 3 ta belgi",
+      "passwordMin": "Kamida 3 ta belgi"
+    }
+  },
+  "staff": {
+    "title": "Xodimlar",
+    "lead": "Tizim foydalanuvchilarini boshqaring — rollar, kirish huquqi va holat. Faqat administratorlar uchun.",
+    "search": "Ism yoki login bo'yicha qidirish",
+    "allRoles": "Barcha rollar",
+    "add": "Xodim qo'shish",
+    "th": {
+      "name": "Ism",
+      "username": "Login",
+      "role": "Rol",
+      "phone": "Telefon",
+      "status": "Holat",
+      "actions": "Amallar"
+    },
+    "active": "Faol",
+    "inactive": "Faol emas",
+    "edit": "Tahrirlash",
+    "deactivate": "O'chirish",
+    "activate": "Faollashtirish",
+    "showing": "Ko'rsatildi {{from}}–{{to}} / {{total}} xodim",
+    "emptyTitle": "Xodimlar topilmadi",
+    "emptyBody": "Qidiruv yoki filtrga mos xodim yo'q. Shartlarni o'zgartiring yoki yangi xodim qo'shing.",
+    "clearFilters": "Filtrlarni tozalash",
+    "errTitle": "Ma'lumotlarni yuklab bo'lmadi",
+    "errBody": "Serverga ulanishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+    "retry": "Qayta urinish",
+    "created": "{{name}} qo'shildi",
+    "saved": "{{name}} saqlandi",
+    "deactivated": "{{name}} o'chirildi",
+    "activated": "{{name}} faollashtirildi"
+  },
+  "drawer": {
+    "addTitle": "Yangi xodim",
+    "addSub": "Tizimga yangi foydalanuvchi qo'shing.",
+    "editTitle": "Xodimni tahrirlash",
+    "editSub": "Foydalanuvchi ma'lumotlarini yangilang.",
+    "firstName": "Ism",
+    "lastName": "Familiya",
+    "phone": "Telefon",
+    "email": "Email",
+    "password": "Parol",
+    "role": "Rol",
+    "optional": "ixtiyoriy",
+    "selectRole": "Rolni tanlang",
+    "activeTitle": "Faol hisob",
+    "activeSub": "O'chirilgan xodim tizimga kira olmaydi.",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "create": "Qo'shish",
+    "pwHint": "Kamida 8 ta belgi.",
+    "vRequired": "Bu maydon majburiy",
+    "vUserTaken": "Bu login band",
+    "vUserShort": "Kamida 3 ta belgi",
+    "vPhone": "Telefon raqami noto'g'ri",
+    "vEmail": "Email noto'g'ri",
+    "vPwShort": "Parol juda qisqa",
+    "conflict": "Login, telefon yoki email allaqachon band"
+  },
+  "dashboard": {
+    "greeting": "Xayrli kun, {{name}}!"
+  },
+  "cp": {
+    "title": "Parolni almashtirish",
+    "lead": "Yangi parol o'rnatilgach, barcha sessiyalar yakunlanadi va qayta kirish talab qilinadi.",
+    "current": "Joriy parol",
+    "new": "Yangi parol",
+    "confirm": "Yangi parol (takror)",
+    "submit": "Parolni yangilash",
+    "success": "Parol yangilandi. Qaytadan kiring.",
+    "wrongCurrent": "Joriy parol noto'g'ri",
+    "vMismatch": "Parollar mos emas"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "superadmin": "Superadmin",
+    "director": "Direktor",
+    "warehouse_keeper": "Ombor mudiri",
+    "workshop_manager": "Ustaxona menejeri",
+    "worker": "Ishchi",
+    "sales": "Sotuv",
+    "customer": "Mijoz"
+  },
+  "crumb": {
+    "list": "Ro'yxat",
+    "create": "Yaratish",
+    "edit": "Tahrirlash",
+    "view": "Ko'rish"
+  }
+}
