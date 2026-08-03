@@ -289,11 +289,12 @@ Bitta qoida ("username ≥ 3 belgi") aynan bitta joyda mavjud; FE/BE drift konst
 | 3 | **Yetkazib beruvchiga qarz (kreditorka)** — nasiya xarid daftari; xarid hujjatidagi totalAmount/paidAmount orqali eshik ochiq (§4.4) | Faza 5+ yoki hech qachon |
 | 4 | **TypeScript 6 ga o'tish** — typescript-eslint qo'llab-quvvatlashiga bog'liq | Lint ekotizimi ruxsat berganda |
 | 5 | **Rol-yaratish UI + permissions modeli** — roles jadvali seed bilan keladi (tizim rollari qat'iy); UI'dan rol yaratish avval bazada saqlanadigan ruxsatlarni talab qiladi (PHASE_0 §13) | Dinamik rollar chindan so'ralganda |
+| 6 | **Nx'ni qachon kiritish** — egasining qarori (2026-07-25): avval poydevorni o'rganish, shuning uchun `apps/admin` mustaqil Vite loyihasi (o'z package.json'i bilan), API esa repo root'ida qoladi; Nx + `apps/api` ko'chirish + `libs/shared` keyinroq. Ungacha Zod sxemalar FE tomonda nusxalanadi (drift xavfi qabul qilingan, kichik saqlanadi) | Umumiy-kontrakt og'rig'i yoki ikkinchi iste'molchi ilova paydo bo'lganda |
 
 ---
 
 ## 13. Keyingi qadam
 
 1. `docs/PHASE_1_MATERIAL_WAREHOUSE.md` ni ko'rib chiqish va tasdiqlash (shu tahrir bilan birga tayyorlangan).
-2. §9 bo'yicha Nx workspace'ni yaratish (`apps/api`, `apps/admin`, `libs/shared`).
+2. ~~Nx workspace'ni yaratish~~ **Kechiktirildi** (§12 #6): `apps/admin` mustaqil ishlaydi; Nx + `libs/shared` keyinroq.
 3. **Faza 0 + Faza 1 ni birga** birinchi ishlatsa bo'ladigan bo'lak sifatida, §7 muhandislik standartlari bilan amalga oshirish.

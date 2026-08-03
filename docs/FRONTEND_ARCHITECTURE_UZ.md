@@ -1,7 +1,8 @@
 # Frontend Arxitekturasi — Admin Dashboard
 
-> **Holat:** Dizayn yakunlangan, hali qurilmagan
-> **Oxirgi yangilanish:** 2026-07-05
+> **Holat:** Dizayn yakunlangan, qurilish boshlandi
+> **Chetlanish (2026-07-25):** Nx **kechiktirildi** (egasining qarori — avval mustaqil loyihalarda poydevorni o'rganish; `BUSINESS_PLAN.md` §12 #6). `apps/admin` hozircha o'z `package.json`iga ega mustaqil Vite loyihasi; API repo root'ida qoladi. Zod sxemalar `libs/shared` paydo bo'lguncha FE tomonda vaqtincha nusxalanadi.
+> **Oxirgi yangilanish:** 2026-07-25
 > **Qamrov:** Ichki admin dashboard (Faza 0 dan boshlab), Nx workspace'da `apps/admin` sifatida yashaydi. Mijoz storefront — alohida ilova (Faza 6, `apps/storefront`).
 > **Bog'liq:** `./PHASE_0_FOUNDATION.md`, `../BUSINESS_PLAN.md` (§9 repo tuzilishi va API kontrakt)
 > **Eslatma:** Bu tarjima; asl (canonical) hujjat — `FRONTEND_ARCHITECTURE.md`.

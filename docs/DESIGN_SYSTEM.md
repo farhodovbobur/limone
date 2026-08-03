@@ -1,7 +1,7 @@
 # Design System — LIMONÉ Admin
 
 > **Status:** Design locked, not yet built
-> **Last updated:** 2026-07-05
+> **Last updated:** 2026-08-01 (§9 iconography locked: Phosphor primary + Heroicons fallback)
 > **Note:** This English document is canonical; `DESIGN_SYSTEM_UZ.md` is a translation.
 > **Scope:** Internal admin dashboard. Customer storefront (Phase 6) may extend this.
 > **Approach:** Full custom design tokens (not a preset). Light mode only.
@@ -312,10 +312,20 @@ This keeps AntD theming token-driven and Tailwind as the layout/utility layer, w
 
 ## 9. Logo & iconography
 
+### Logo
+
 - **Wordmark** "LIMONÉ" in `font-serif`, color `olive-600`; tagline "APPAREL" in letter-spaced sans, `olive-700`. Used in the sidebar header and the login screen.
 - Do **not** set the rest of the UI in serif — serif is reserved for the wordmark and login hero.
-- Icons: one outline icon set (Ant Design Icons or Tabler), stroke style, `text-secondary` by default, `olive-600` when active.
 - Provide the logo as **SVG** (crisp at any size). Keep clear-space equal to the cap height around it.
+
+### Iconography (locked 2026-08-01)
+
+- **Primary set: Phosphor** (`@phosphor-icons/react`). Chosen for its weight system (regular / fill / duotone) and full garment-domain coverage (needle, t-shirt, swatches, coat-hanger). Comparison board that backed the decision: `apps/admin/public/icon-preview.html`.
+- **Approved fallback: Heroicons** (`@heroicons/react`) — per-icon exceptions only, when no Phosphor glyph fits. Try Phosphor alternatives first (9 000+ glyphs). One visual language per row: icons sitting in the same row of equal-hierarchy items (nav list, toolbar, menu) must all come from one set.
+- **Single registry rule:** components never import an icon library directly. Every icon goes through `apps/admin/src/shared/icons.tsx` — semantic names (`Icons.edit`, `Icons.logout`), `ph()` / `hero()` adapters normalizing both libraries to one `IconProps` interface, and `MODULE_ICONS` keeping sidebar and module placeholders in sync. Swapping any glyph (including to Heroicons) is a one-line registry change; call sites never change.
+- **Weights:** `regular` by default; `fill` for the active nav item. The `hero()` adapter maps `weight="fill"` to the solid variant, so the active pattern survives a library swap. Don't mix weights within one row of equal items.
+- **Sizes** (`size` prop, px): nav items 19, dropdown menu items 17, buttons 15–17, input prefixes 15–16, empty/error state art 26–30. Icon-only buttons keep the ≥ 36px hit area from §10.
+- **Color:** `text-ink-tertiary` by default in chrome, `olive-700` on hover (via `group-hover`), white on active/olive surfaces. Icons never introduce colors outside the palette.
 
 ---
 

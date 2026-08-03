@@ -288,11 +288,12 @@ One rule ("username ≥ 3 chars") exists in exactly one place; FE/BE drift is im
 | 3 | **Supplier debt (payables)** — credit purchases ledger; door kept open via totalAmount/paidAmount on receipts (§4.4) | Phase 5+ or never |
 | 4 | **TypeScript 6 upgrade** — blocked on typescript-eslint support | When lint ecosystem allows |
 | 5 | **Role-creation UI + permissions model** — roles table ships seeded (system roles fixed); creating roles via UI needs DB-stored permissions first (PHASE_0 §13) | When dynamic roles are actually requested |
+| 6 | **Nx adoption timing** — owner decision (2026-07-25): learn fundamentals first, so `apps/admin` runs as a standalone Vite project (own package.json) and the API stays at the repo root; Nx + `apps/api` move + `libs/shared` come later. Until then Zod schemas are duplicated FE-side (drift risk accepted, kept small) | When shared-contract pain or a second consumer app makes it worth it |
 
 ---
 
 ## 13. Immediate next step
 
 1. Review & approve `docs/PHASE_1_MATERIAL_WAREHOUSE.md` (drafted alongside this revision).
-2. Scaffold the Nx workspace (`apps/api`, `apps/admin`, `libs/shared`) per §9.
+2. ~~Scaffold the Nx workspace~~ **Deferred** (§12 #6): `apps/admin` runs standalone; Nx + `libs/shared` later.
 3. Implement **Phase 0 + Phase 1 together** as the first usable slice, with the engineering standards of §7.

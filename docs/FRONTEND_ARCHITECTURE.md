@@ -1,7 +1,8 @@
 # Frontend Architecture — Admin Dashboard
 
-> **Status:** Design locked, not yet built
-> **Last updated:** 2026-07-05
+> **Status:** Design locked, build started
+> **Deviation (2026-07-25):** Nx is **deferred** (owner decision — learn the fundamentals on standalone projects first; `BUSINESS_PLAN.md` §12 #6). `apps/admin` currently runs as an independent Vite project with its own `package.json`; the API stays at the repo root. Zod schemas are temporarily duplicated on the FE until `libs/shared` exists.
+> **Last updated:** 2026-07-25
 > **Scope:** Internal admin dashboard (Phase 0 onward), living at `apps/admin` in the Nx workspace. Customer storefront is a separate app (Phase 6, `apps/storefront`).
 > **Related:** `./PHASE_0_FOUNDATION.md`, `../BUSINESS_PLAN.md` (§9 repo structure & API contract)
 > **Note:** This English document is canonical; `FRONTEND_ARCHITECTURE_UZ.md` is a translation.

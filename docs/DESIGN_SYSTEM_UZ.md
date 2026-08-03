@@ -1,7 +1,7 @@
 # Dizayn Tizimi — LIMONÉ Admin
 
 > **Holat:** Dizayn yakunlangan, hali qurilmagan
-> **Oxirgi yangilanish:** 2026-07-05
+> **Oxirgi yangilanish:** 2026-08-01 (§9 ikonografiya qat'iylashdi: Phosphor asosiy + Heroicons zaxira)
 > **Qamrov:** Ichki admin dashboard. Mijoz do'koni (Faza 6) buni kengaytirishi mumkin.
 > **Eslatma:** Bu tarjima; asl (canonical) hujjat — `DESIGN_SYSTEM.md`.
 > **Yondashuv:** To'liq custom design token (preset emas). Faqat light mode.
@@ -312,10 +312,20 @@ Bu AntD theming'ни token asosida, Tailwind'ни esa layout/utility qatlami sif
 
 ## 9. Logo va ikonografiya
 
-- **Wordmark** "LIMONÉ" `font-serif`да, rang `olive-600`; tagline "APPAREL" harf oralig'i ochilgan sans, `olive-700`. Sidebar header va login ekranида ishlatiladi.
-- UI ning qolganini serifда **yozma** — serif faqat wordmark va login hero uchun.
-- Ikonalar: bitta outline ikona to'plami (Ant Design Icons yoki Tabler), stroke uslub, standart `text-secondary`, faolда `olive-600`.
-- Logoни **SVG** sifatida ber (har o'lchamда aniq). Atrofида cap balandligiga teng bo'sh joy qoldir.
+### Logo
+
+- **Wordmark** "LIMONÉ" `font-serif`da, rang `olive-600`; tagline "APPAREL" harf oralig'i ochilgan sans, `olive-700`. Sidebar header va login ekranida ishlatiladi.
+- UI ning qolganini serifda **yozma** — serif faqat wordmark va login hero uchun.
+- Logoni **SVG** sifatida ber (har o'lchamda aniq). Atrofida cap balandligiga teng bo'sh joy qoldir.
+
+### Ikonografiya (qat'iylashdi 2026-08-01)
+
+- **Asosiy to'plam: Phosphor** (`@phosphor-icons/react`). Vazn tizimi (regular / fill / duotone) va tikuvchilik domenini to'liq qoplashi (needle, t-shirt, swatches, coat-hanger) uchun tanlandi. Qarorga asos bo'lgan taqqoslash sahifasi: `apps/admin/public/icon-preview.html`.
+- **Ruxsat etilgan zaxira: Heroicons** (`@heroicons/react`) — faqat alohida ikon istisnolari uchun, Phosphor'da mos glif topilmasa. Avval Phosphor muqobillarini sinab ko'r (9 000+ glif). Bir qator — bir til: teng darajali elementlar qatoridagi (nav ro'yxati, toolbar, menyu) barcha ikonlar bitta to'plamdan bo'lishi shart.
+- **Yagona registry qoidasi:** komponentlar icon kutubxonasini to'g'ridan-to'g'ri import qilmaydi. Har bir ikon `apps/admin/src/shared/icons.tsx` orqali o'tadi — semantik nomlar (`Icons.edit`, `Icons.logout`), ikkala kutubxonani bitta `IconProps` interfeysiga keltiruvchi `ph()` / `hero()` adapterlari va sidebar bilan modul placeholder'larini sinxron tutuvchi `MODULE_ICONS`. Istalgan glifni almashtirish (jumladan Heroicons'ga) — registry'da bir qatorlik o'zgarish; chaqiruv joylari o'zgarmaydi.
+- **Vaznlar:** standart `regular`; faol nav elementi `fill`. `hero()` adapteri `weight="fill"`ni solid variantga o'giradi, shuning uchun faol-holat naqshi kutubxona almashsa ham saqlanadi. Teng elementlar qatorida vaznlarni aralashtirma.
+- **O'lchamlar** (`size` prop, px): nav elementlari 19, dropdown menyu bandlari 17, tugmalar 15–17, input prefikslari 15–16, bo'sh/xato holat rasmlari 26–30. Faqat-ikon tugmalar §10 dagi ≥ 36px bosish maydonini saqlaydi.
+- **Rang:** chrome'da standart `text-ink-tertiary`, hover'da `olive-700` (`group-hover` orqali), faol/olive yuzalarda oq. Ikonlar palitradan tashqari rang kiritmaydi.
 
 ---
 
