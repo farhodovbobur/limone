@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<title>LIMONÉ Design System</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --olive-50:#F6F7EA; --olive-100:#E7EBC4; --olive-200:#D3DA96; --olive-300:#B9C264;
+    --olive-400:#A8B04A; --olive-500:#8A9340; --olive-600:#6F762F; --olive-700:#5A6126;
+    --olive-800:#454B1C; --olive-900:#2F3312;
+    --cream-50:#FEFEF7; --cream-100:#FBF9E8; --cream-200:#F5F1CF; --cream-300:#ECE6B3;
+    --ink:#2C2E22; --ink-2:#5F614E; --ink-3:#8A8B7C;
+    --surface:#FFFFFF; --bg:#F5F7FA; --line:#E6E6DD;
+    --danger:#A32D2D; --danger-fill:#FCEBEB; --success:#3B6D11; --success-fill:#EAF3DE;
+    --sh:0 1px 2px rgba(44,46,34,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:26px;background:#DFE1DC;font-family:'Manrope',sans-serif;color:var(--ink);font-size:14px}
+  .board{display:grid;grid-template-columns:330px 1fr 1fr 1fr;gap:16px;max-width:1420px;margin:0 auto}
+  .tile{background:#F1F2EE;border-radius:16px;padding:22px;box-shadow:var(--sh)}
+  .tile .cap{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--ink-2);margin-bottom:14px}
+  .tile .cap b{color:var(--ink);font-weight:500}
+  .tile .cap .ref{font-size:13px;color:var(--ink-3)}
+
+  /* color cards */
+  .cardc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--sh);margin-bottom:16px}
+  .cardc .head{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 46px;font-weight:500}
+  .cardc .ramp{display:flex;height:56px}
+  .cardc .ramp span{flex:1}
+
+  .aa{font-size:96px;line-height:1;margin:6px 0 2px}
+  .serif{font-family:'Cormorant Garamond',serif;font-weight:600}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 18px;border-radius:8px;border:1px solid transparent;font:500 14px 'Manrope';cursor:pointer;margin:0 8px 10px 0}
+  .b-pri{background:var(--olive-600);color:#fff}
+  .b-sec{background:#fff;border-color:var(--line);color:var(--ink)}
+  .b-inv{background:var(--ink);color:#fff}
+  .b-out{background:transparent;border-color:var(--olive-600);color:var(--olive-600)}
+
+  .search{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--ink-3)}
+
+  .skel{height:8px;border-radius:4px;margin:12px 0}
+  .sk1{background:var(--olive-600);width:60%}
+  .sk2{background:var(--olive-700);width:73%}
+  .sk3{background:var(--olive-800);width:47%}
+  .skbg{background:#E4E5E0;width:86%;position:relative;overflow:hidden}
+
+  .pill{display:inline-flex;gap:6px;background:#E4E5E0;border-radius:14px;padding:8px}
+  .pill .ic{width:44px;height:44px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-2)}
+  .pill .ic.on{background:var(--olive-600);color:#fff}
+
+  .icbtn{width:44px;height:44px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer;margin-right:10px}
+  .g1{background:#6E7160;color:#fff}
+  .g2{background:var(--olive-700);color:#fff}
+  .g3{background:#6E7160;color:#fff}
+  .g4{background:#B2352B;color:#fff}
+
+  .lbl{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:8px;background:var(--olive-600);color:#F6F7EA;font-weight:500;border:none}
+
+  .tag{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:3px 7px 7px 3px;font-size:12px;font-weight:500;margin-right:8px}
+  .tag i{width:6px;height:6px;border-radius:50%;background:#fff;border:1px solid rgba(69,75,28,.4)}
+  .t-role{background:var(--olive-100);color:var(--olive-800)}
+  .t-ok{background:var(--success-fill);color:var(--success)}
+  .t-ok i{border-color:rgba(59,109,17,.4)}
+  .t-no{background:#EDF0F3;color:var(--ink-2)}
+  .t-no i{border-color:rgba(138,139,124,.5)}
+  .sw{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:var(--olive-100);border:1px solid rgba(211,218,150,.6);color:var(--olive-800);font-weight:500;margin-right:10px}
+  svg{flex:none}
+</style>
+</head>
+<body>
+<div class="board">
+
+  <div>
+    <div class="cardc"><div class="head" style="background:var(--olive-600);color:#fff"><span>Primary</span><span>#6F762F</span></div>
+      <div class="ramp"><span style="background:var(--olive-900)"></span><span style="background:var(--olive-800)"></span><span style="background:var(--olive-700)"></span><span style="background:var(--olive-600)"></span><span style="background:var(--olive-500)"></span><span style="background:var(--olive-400)"></span><span style="background:var(--olive-300)"></span><span style="background:var(--olive-200)"></span><span style="background:var(--olive-100)"></span><span style="background:var(--olive-50)"></span></div></div>
+    <div class="cardc"><div class="head" style="background:var(--cream-100)"><span>Secondary</span><span>#FBF9E8</span></div>
+      <div class="ramp"><span style="background:color-mix(in srgb,var(--cream-100),black 78%)"></span><span style="background:color-mix(in srgb,var(--cream-100),black 60%)"></span><span style="background:color-mix(in srgb,var(--cream-100),black 44%)"></span><span style="background:color-mix(in srgb,var(--cream-100),black 30%)"></span><span style="background:color-mix(in srgb,var(--cream-100),black 16%)"></span><span style="background:var(--cream-300)"></span><span style="background:var(--cream-200)"></span><span style="background:var(--cream-100)"></span><span style="background:var(--cream-50)"></span><span style="background:#fff"></span></div></div>
+    <div class="cardc"><div class="head" style="background:var(--ink);color:#fff"><span>Tertiary</span><span>#2C2E22</span></div>
+      <div class="ramp"><span style="background:#15160F"></span><span style="background:var(--ink)"></span><span style="background:#3C3E30"></span><span style="background:var(--ink-2)"></span><span style="background:#767865"></span><span style="background:var(--ink-3)"></span><span style="background:#A9AA9D"></span><span style="background:#C8C9BF"></span><span style="background:#E3E4DD"></span><span style="background:#F4F4F0"></span></div></div>
+    <div class="cardc"><div class="head" style="background:var(--bg)"><span>Neutral</span><span>#F5F7FA</span></div>
+      <div class="ramp"><span style="background:#23262B"></span><span style="background:#3C4147"></span><span style="background:#565B63"></span><span style="background:#71767F"></span><span style="background:#8D929B"></span><span style="background:#A9AEB6"></span><span style="background:#C5C9D0"></span><span style="background:#DFE2E7"></span><span style="background:#EDF0F3"></span><span style="background:var(--bg)"></span></div></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="tile"><div class="cap"><b>Logo / Brend</b><span class="ref">Cormorant Garamond</span></div>
+      <div class="aa serif" style="color:var(--olive-600)">Aa</div></div>
+    <div class="tile"><div class="cap"><b>Body</b><span class="ref">Manrope</span></div>
+      <div class="aa" style="font-weight:400;color:var(--ink)">Aa</div></div>
+    <div class="tile"><div class="cap"><b>Label</b><span class="ref">Manrope 500</span></div>
+      <div class="aa" style="font-weight:500;color:var(--ink)">Aa</div></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="tile">
+      <button class="btn b-pri">Primary</button><button class="btn b-sec">Secondary</button><br/>
+      <button class="btn b-inv">Inverted</button><button class="btn b-out">Outlined</button>
+    </div>
+    <div class="tile">
+      <div class="skel sk1"></div><div class="skel sk2"></div><div class="skel sk3"></div><div class="skel skbg"></div>
+    </div>
+    <div class="tile">
+      <span class="tag t-role"><i></i>Administrator</span><span class="tag t-ok"><i></i>Faol</span><span class="tag t-no"><i></i>Faol emas</span>
+      <div style="margin-top:16px"><span class="sw">DK</span><span class="sw" style="background:var(--cream-200);border-color:var(--cream-300)">BN</span><span class="sw">AS</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="tile">
+      <div class="search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Qidirish</div>
+    </div>
+    <div class="tile">
+      <span class="pill">
+        <span class="ic on"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z"/></svg></span>
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
+      </span>
+    </div>
+    <div class="tile">
+      <button class="lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Label</button>
+    </div>
+    <div class="tile">
+      <button class="icbtn g1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 4 5 5L8.5 20.5 2 22l1.5-6.5Z"/></svg></button><button class="icbtn g2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 18H3Z"/></svg></button><button class="icbtn g3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7v10l10 5 10-5V7Z"/></svg></button><button class="icbtn g4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

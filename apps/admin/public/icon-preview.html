@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<title>Icon preview — LIMONÉ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:28px; background:#F5F7FA; color:#2C2E22; font:400 14px/1.5 'Manrope',system-ui,sans-serif; }
+  .card { background:#fff; border:1px solid #E6E6DD; border-radius:12px; padding:18px 22px; margin-bottom:14px; box-shadow:0 1px 2px rgba(44,46,34,.06); }
+  .tag { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#8A8B7C; margin-bottom:2px; }
+  h1 { margin:0 0 4px; font-size:22px; font-weight:500; }
+  h2 { margin:0; font-size:18px; font-weight:600; }
+  .meta { font-size:12px; color:#8A8B7C; margin:2px 0 14px; }
+  .sub { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#8A8B7C; margin:14px 0 8px; }
+  .muted { color:#5F614E; font-size:13px; }
+
+  .row { display:flex; flex-wrap:wrap; gap:6px; }
+  .tile { width:72px; padding:10px 4px 8px; text-align:center; border:1px solid #F0F0E8; border-radius:8px; background:#FEFEF7; }
+  .tile iconify-icon { font-size:21px; color:#5F614E; display:block; margin:0 auto 6px; }
+  .tile .lbl { font-size:10px; color:#8A8B7C; line-height:1.2; }
+  .tile.gap { background:#FCEBEB; border-color:#F5D5D5; }
+  .tile.gap .x { font-size:15px; color:#A32D2D; line-height:21px; display:block; margin-bottom:6px; }
+  .tile.gap .lbl { color:#A32D2D; }
+
+  .split { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+  .split > .icons { flex:1 1 420px; min-width:320px; }
+
+  /* mini sidebar mock — replica of the real shell */
+  .mock { flex:0 0 232px; background:#FBF9E8; border:1px solid #F5F1CF; border-radius:10px; padding:10px; }
+  .mock .mtitle { font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#8A8B7C; padding:2px 10px 8px; }
+  .mock .item { display:flex; align-items:center; gap:12px; height:40px; padding:0 12px; border-radius:8px; font-size:14px; font-weight:500; color:#5F614E; }
+  .mock .item iconify-icon { font-size:19px; color:#8A8B7C; }
+  .mock .item.active { background:#5A6126; color:#fff; }
+  .mock .item.active iconify-icon { color:#fff; }
+  .mock .item:not(.active):hover { background:#E7EBC4; color:#454B1C; }
+  .mock .item:not(.active):hover iconify-icon { color:#5A6126; }
+
+  .note { font-size:12.5px; color:#5F614E; background:#F6F7EA; border:1px solid #E7EBC4; border-radius:8px; padding:8px 12px; margin-top:14px; }
+  .tile.cur { border-color:#A8B04A; background:#F6F7EA; }
+  .tile.cur .lbl { color:#5A6126; font-weight:600; }
+  .rowline { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .rowlbl { width:128px; font-size:12px; font-weight:600; color:#5F614E; flex:none; }
+  .verdict li { margin-bottom:6px; font-size:13.5px; }
+  .verdict b { font-weight:600; }
+  .ok { color:#3B6D11; font-weight:600; }
+  .bad { color:#A32D2D; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="tag">LIMONÉ — icon tanlash</div>
+  <h1>Icon kutubxonalari taqqoslash</h1>
+  <p class="muted" style="margin:0">
+    Har bir to'plamda: 7 ta nav ikon + tikuvchilik-domen ikonlari (Phase 1+ uchun) + real sidebar mock.
+    Sonlar va mavjudlik Iconify API orqali tekshirilgan (2026-08-01).
+    Sahifa CDN orqali chizadi; tanlangandan keyin npm paket o'rnatiladi.
+  </p>
+</div>
+
+<div id="root"></div>
+
+<div class="card verdict">
+  <div class="tag">Xulosa</div>
+  <ul style="margin:8px 0 0; padding-left:18px">
+    <li><b>Phosphor</b> — yagona <b>ko'rinishni haqiqatan o'zgartiradigan</b> variant: 6 vazn (regular/duotone/fill…),
+      active holatga <i>fill</i>, qolganiga <i>regular</i> — chuqurroq xarakter. Domen ikonlari <span class="ok">to'liq</span> (igna, ko'ylak, ombor…).</li>
+    <li><b>Tabler</b> — eng katta qamrov (6184 ta, hatto <i>needle-thread</i> bor), lekin ko'rinishi Lucide bilan deyarli bir xil —
+      almashtirsak foydalanuvchi farqni sezmaydi. Qamrov kerak bo'lsa kuchli.</li>
+    <li><b>Lucide (hozirgi)</b> — neytral-professional, 1756 ta. <i>spool</i> (g'altak) bor, lekin <i>needle</i> <span class="bad">yo'q</span>.</li>
+    <li><b>Heroicons</b> — 1288 ta (asli ~316 ta × 4 uslub). ERP domen ikonlari <span class="bad">yo'q</span>: factory, shirt, needle, ruler, warehouse topilmadi — chiqib ketadi.</li>
+    <li><b>Boshqa mashhurlar</b> (yuqorida): Material Symbols kuchli, lekin UI'ga «Google mahsuloti» ko'rinishini beradi; Hugeicons domen bo'yicha eng boy (tape-measure!), ammo fill/duotone vaznlari pullik; Solar va MingCute'da rasmiy React paketi yo'q. <b>Needle</b> (igna) faqat Phosphor va Tabler'da bor.</li>
+  </ul>
+</div>
+
+<script>
+const NAV_LABELS = ['Boshqaruv','Materiallar','Tayyor mahsulot','Ishlab chiqarish','Xodimlar','Buyurtmalar','Hisobotlar'];
+const DOMAIN_LABELS = ['Bichish','Kiyim','Igna','O\'lchov','Yetkazish','Hisob-faktura','Ombor','QR'];
+
+const SETS = [
+  {
+    name: 'Lucide', tag: 'hozirgi', count: '1756 ta · 2px shtrix · 24px setka',
+    nav: ['lucide:layout-dashboard','lucide:layers','lucide:package','lucide:factory','lucide:users','lucide:shopping-cart','lucide:chart-column'],
+    domain: ['lucide:scissors','lucide:shirt',null,'lucide:ruler','lucide:truck','lucide:receipt-text','lucide:warehouse','lucide:qr-code'],
+    mockActive: 'lucide:factory',
+    note: "Bonus: lucide'da <b>spool</b> (ip g'altagi) bor — <iconify-icon icon='lucide:spool' style='font-size:16px;vertical-align:-3px'></iconify-icon>. Lekin <b>needle</b> yo'q.",
+  },
+  {
+    name: 'Phosphor — Regular', tag: 'nomzod', count: "9072 ta (6 vazn × ~1512) · yumshoqroq, dumaloq shakllar",
+    nav: ['ph:squares-four','ph:stack','ph:package','ph:factory','ph:users','ph:shopping-cart','ph:chart-bar'],
+    domain: ['ph:scissors','ph:t-shirt','ph:needle','ph:ruler','ph:truck','ph:receipt','ph:warehouse','ph:qr-code'],
+    mockActive: 'ph:factory-fill',
+    mockNote: "Mock'da pattern: active = <b>fill</b> vazn, qolganlari regular",
+    note: "Barcha domen ikonlari bor. React'da: <code>&lt;Factory weight=\"fill\" /&gt;</code> — bitta prop bilan vazn almashadi.",
+  },
+  {
+    name: 'Phosphor — Duotone', tag: 'nomzod (xarakterli)', count: "o'sha to'plam, duotone vazni — ikki qatlamli",
+    nav: ['ph:squares-four-duotone','ph:stack-duotone','ph:package-duotone','ph:factory-duotone','ph:users-duotone','ph:shopping-cart-duotone','ph:chart-bar-duotone'],
+    domain: ['ph:scissors-duotone','ph:t-shirt-duotone','ph:needle-duotone','ph:ruler-duotone','ph:truck-duotone','ph:receipt-duotone','ph:warehouse-duotone','ph:qr-code-duotone'],
+    mockActive: 'ph:factory-duotone',
+    mockNote: "Mock'da: hamma ikon duotone — orqa qatlam olive rangda 'to'ldiriladi'",
+    note: "Duotone — eng ko'p xarakter: ikkinchi qatlam brend rangini oladi. Kichik o'lchamda (19px) ham o'qiladi.",
+  },
+  {
+    name: 'Tabler', tag: 'qamrov chempioni', count: '6184 ta · 2px shtrix · 24px setka (Lucide uslubiga juda yaqin)',
+    nav: ['tabler:layout-dashboard','tabler:stack-2','tabler:package','tabler:building-factory-2','tabler:users','tabler:shopping-cart','tabler:chart-bar'],
+    domain: ['tabler:scissors','tabler:shirt','tabler:needle-thread','tabler:ruler-2','tabler:truck-delivery','tabler:file-invoice','tabler:building-warehouse','tabler:qrcode'],
+    mockActive: 'tabler:building-factory-2',
+    note: "Hatto <b>needle-thread</b> (ignada ip) bor — tikuvchilik uchun eng boy to'plam. Lekin ko'rinishi Lucide'dan deyarli farq qilmaydi.",
+  },
+  {
+    name: 'Heroicons', tag: 'kichik to\'plam', count: "1288 ta (asli ~316 × outline/solid/mini/micro) · 1.5px shtrix",
+    nav: ['heroicons:squares-2x2','heroicons:square-3-stack-3d','heroicons:cube','heroicons:building-office-2','heroicons:users','heroicons:shopping-cart','heroicons:chart-bar'],
+    domain: ['heroicons:scissors',null,null,null,'heroicons:truck','heroicons:document-text',null,'heroicons:qr-code'],
+    mockActive: 'heroicons:building-office-2',
+    note: "<b>Ishlab chiqarish</b> uchun factory yo'q — building-office-2 bilan almashtirishga to'g'ri keldi. Domen qamrovi eng zaif.",
+  },
+];
+
+const SETS2 = [
+  {
+    name: 'Material Symbols', tag: 'google standarti', count: "15 585 ta · outline/rounded/sharp + fill · Material ekotizimi npm'da 7,3 mln/hafta",
+    nav: ['material-symbols:dashboard-outline','material-symbols:layers-outline','material-symbols:package-2-outline','material-symbols:factory-outline','material-symbols:group-outline','material-symbols:shopping-cart-outline','material-symbols:bar-chart'],
+    domain: ['material-symbols:content-cut','material-symbols:apparel-outline',null,'material-symbols:straighten','material-symbols:local-shipping-outline','material-symbols:receipt-long-outline','material-symbols:warehouse-outline','material-symbols:qr-code'],
+    mockActive: 'material-symbols:factory',
+    mockNote: "Mock'da pattern: active = filled variant",
+    note: "Eng katta rasmiy to'plam. <b>apparel</b> (kiyim) va <b>checkroom</b> (ilgak <iconify-icon icon='material-symbols:checkroom' style='font-size:16px;vertical-align:-3px'></iconify-icon>) bor. Minusi: UI «Google mahsuloti» ko'rinishini oladi; needle yo'q.",
+  },
+  {
+    name: 'Hugeicons', tag: 'domen boyligi', count: "5 065 ta (bepul stroke uslubi; boshqa vaznlar pullik) · npm: 757 ming/hafta",
+    nav: ['hugeicons:dashboard-square-01','hugeicons:layers-01','hugeicons:package','hugeicons:factory-01','hugeicons:user-multiple','hugeicons:shopping-cart-01','hugeicons:chart-column'],
+    domain: ['hugeicons:scissor-01','hugeicons:shirt-01',null,'hugeicons:tape-measure','hugeicons:delivery-truck-01','hugeicons:invoice-01','hugeicons:warehouse','hugeicons:qr-code'],
+    mockActive: 'hugeicons:factory-01',
+    note: "Domen qamrovi ajoyib: <b>tape-measure</b> (santimetr lenta! <iconify-icon icon='hugeicons:tape-measure' style='font-size:16px;vertical-align:-3px'></iconify-icon>), shirt, warehouse, invoice bor. Minusi: fill/duotone vaznlar pullik — active holatni faqat rang bilan farqlaymiz.",
+  },
+  {
+    name: 'Solar', tag: 'dribbble uslubi', count: "7 401 ta · 6 uslub (linear/bold/duotone…) · rasmiy React paketi yo'q (Iconify orqali)",
+    nav: ['solar:widget-linear','solar:layers-linear','solar:box-linear','solar:buildings-3-linear','solar:users-group-rounded-linear','solar:cart-3-linear','solar:chart-linear'],
+    domain: ['solar:scissors-linear','solar:t-shirt-linear',null,'solar:ruler-linear','solar:delivery-linear','solar:bill-list-linear',null,'solar:qr-code-linear'],
+    mockActive: 'solar:buildings-3-bold',
+    mockNote: "Mock'da pattern: active = bold uslub",
+    note: "Zamonaviy, «dizaynerlik» ko'rinish. Minuslari: factory ham (buildings-3 bilan yopdik), warehouse ham, needle ham yo'q; React'da rasmiy paket o'rniga @iconify/react kerak bo'ladi.",
+  },
+  {
+    name: 'Remix Icon', tag: 'line/fill juftliklari', count: "3 188 ta · har ikonda line+fill juftligi · npm: 163 ming/hafta",
+    nav: ['ri:dashboard-line','ri:stack-line','ri:box-3-line','ri:building-2-line','ri:group-line','ri:shopping-cart-2-line','ri:bar-chart-2-line'],
+    domain: ['ri:scissors-line','ri:t-shirt-line',null,'ri:ruler-line','ri:truck-line','ri:bill-line',null,'ri:qr-code-line'],
+    mockActive: 'ri:building-2-fill',
+    mockNote: "Mock'da pattern: active = fill juftligi",
+    note: "Toza, muvozanatli uslub. Minusi: factory yo'q (building-2 bilan yopdik), warehouse va needle ham yo'q — qamrov biz uchun yetarli emas.",
+  },
+  {
+    name: 'MingCute', tag: 'yumaloq uslub', count: "3 320 ta · line/fill juftliklari · rasmiy React paketi yo'q",
+    nav: ['mingcute:dashboard-line','mingcute:layer-line','mingcute:box-2-line','mingcute:factory-line','mingcute:group-2-line','mingcute:shopping-cart-1-line','mingcute:chart-bar-line'],
+    domain: ['mingcute:scissors-line','mingcute:t-shirt-line',null,'mingcute:ruler-line','mingcute:truck-line','mingcute:bill-line',null,'mingcute:qrcode-line'],
+    mockActive: 'mingcute:factory-fill',
+    mockNote: "Mock'da pattern: active = fill juftligi",
+    note: "Yumshoq, do'stona shakllar — Manrope bilan uyg'un. Minusi: warehouse/needle yo'q, React paketi norasmiy.",
+  },
+];
+
+const root = document.getElementById('root');
+function renderSet(s) {
+  const navTiles = s.nav.map((ic, i) =>
+    `<div class="tile"><iconify-icon icon="${ic}"></iconify-icon><div class="lbl">${NAV_LABELS[i]}</div></div>`).join('');
+  const domTiles = s.domain.map((ic, i) => ic
+    ? `<div class="tile"><iconify-icon icon="${ic}"></iconify-icon><div class="lbl">${DOMAIN_LABELS[i]}</div></div>`
+    : `<div class="tile gap"><span class="x">×</span><div class="lbl">${DOMAIN_LABELS[i]}<br>yo'q</div></div>`).join('');
+  const mockItems = [3, 1, 4].map((navIdx, j) => {
+    const active = j === 0;
+    const icon = active ? s.mockActive : s.nav[navIdx];
+    return `<div class="item${active ? ' active' : ''}"><iconify-icon icon="${icon}"></iconify-icon>${NAV_LABELS[navIdx]}</div>`;
+  }).join('');
+  root.insertAdjacentHTML('beforeend', `
+    <div class="card">
+      <div class="tag">${s.tag}</div>
+      <h2>${s.name}</h2>
+      <div class="meta">${s.count}</div>
+      <div class="split">
+        <div class="icons">
+          <div class="sub">Navigatsiya (7)</div>
+          <div class="row">${navTiles}</div>
+          <div class="sub">Tikuvchilik domeni</div>
+          <div class="row">${domTiles}</div>
+        </div>
+        <div class="mock">
+          <div class="mtitle">Sidebar mock</div>
+          ${mockItems}
+          ${s.mockNote ? `<div style="font-size:10.5px;color:#8A8B7C;padding:8px 10px 2px">${s.mockNote}</div>` : ''}
+        </div>
+      </div>
+      <div class="note">${s.note}</div>
+    </div>`);
+}
+SETS.forEach(renderSet);
+root.insertAdjacentHTML('beforeend', `
+  <div class="card" style="background:#F6F7EA">
+    <div class="tag">Kengaytirilgan ro'yxat</div>
+    <h2 style="font-size:16px">Boshqa mashhur to'plamlar</h2>
+    <p class="muted" style="margin:4px 0 0">
+      npm haftalik yuklab olishlar (2026-08-01): lucide-react <b>81,8 mln</b> · react-icons 7,7 mln ·
+      @mui/icons-material 7,3 mln · @radix-ui/react-icons 5,0 mln · @ant-design/icons 4,3 mln ·
+      @heroicons/react 3,8 mln · @phosphor-icons/react 2,8 mln · @tabler/icons-react 2,8 mln ·
+      Font Awesome (react) 2,2 mln · bootstrap-icons 776 ming · @hugeicons/react 757 ming · remixicon 163 ming.
+      Radix (332 ta) va Feather (286 ta) juda kichik; Font Awesome free-regular atigi 163 ta;
+      Bootstrap Icons (2 078) va Carbon (2 590) uslubi brendimizga mos emas — ular kartasiz qoldirildi.
+    </p>
+  </div>`);
+SETS2.forEach(renderSet);
+
+// ---- Savolga javob: ikki setni aralashtirish demo ----
+const tile = (icon, lbl, cls = '') =>
+  `<div class="tile ${cls}"><iconify-icon icon="${icon}"></iconify-icon><div class="lbl">${lbl}</div></div>`;
+const mockItem = (icon, lbl, active = false) =>
+  `<div class="item${active ? ' active' : ''}"><iconify-icon icon="${icon}"></iconify-icon>${lbl}</div>`;
+
+root.insertAdjacentHTML('beforeend', `
+  <div class="card">
+    <div class="tag">Savolga javob — tajriba</div>
+    <h2>Phosphor + Heroicons aralashmasi</h2>
+    <div class="meta">Chapda sof Phosphor, o'ngda aralash. O'zing solishtir: qaysi biri «bir mahsulot»dek ko'rinadi?</div>
+    <div class="split">
+      <div class="mock">
+        <div class="mtitle">Sof Phosphor</div>
+        ${mockItem('ph:factory-fill', 'Ishlab chiqarish', true)}
+        ${mockItem('ph:squares-four', 'Boshqaruv')}
+        ${mockItem('ph:stack', 'Materiallar')}
+        ${mockItem('ph:users', 'Xodimlar')}
+      </div>
+      <div class="mock">
+        <div class="mtitle">Aralash (Ph + Hero)</div>
+        ${mockItem('heroicons:building-office-2', 'Ishlab chiqarish', true)}
+        ${mockItem('heroicons:squares-2x2', 'Boshqaruv')}
+        ${mockItem('ph:stack', 'Materiallar')}
+        ${mockItem('ph:users', 'Xodimlar')}
+      </div>
+      <div class="icons" style="flex:1 1 300px">
+        <div class="sub">Bir tushuncha — ikki til</div>
+        <div class="row">
+          ${tile('ph:squares-four', 'Ph')}${tile('heroicons:squares-2x2', 'Hero')}
+          ${tile('ph:users', 'Ph')}${tile('heroicons:users', 'Hero')}
+          ${tile('ph:shopping-cart', 'Ph')}${tile('heroicons:shopping-cart', 'Hero')}
+          ${tile('ph:chart-bar', 'Ph')}${tile('heroicons:chart-bar', 'Hero')}
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      Og'irligi yaqin (ikkalasi ~1.5px shtrix) — shuning uchun bu «eng yumshoq» aralashma.
+      Lekin shakl tili farq qiladi: Phosphor dumaloq-geometrik, Heroicons to'rtburchak-neytral.
+      Bitta qatorda (nav ichida) aralashtirilsa ko'z buni «notekislik» sifatida sezadi.
+      Agar baribir aralashtirsak, qoida: <b>bitta ko'rinish qatori = bitta set</b> (masalan, nav to'liq Phosphor,
+      alohida sahifa ikonlari to'liq Heroicons) va markaziy <code>icons.ts</code> orqali.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tag">Yoqmagan ikonga yechim</div>
+    <h2>Phosphor ichki muqobillari</h2>
+    <div class="meta">Yoqmagan ikonni boshqa kutubxonadan emas, Phosphor'ning o'zidan almashtiramiz — 9 072 ta ichida har tushunchaga 3–6 muqobil bor. Birinchi (belgilangan) plitka — joriy tanlov.</div>
+    <div class="rowline"><div class="rowlbl">Boshqaruv</div>
+      ${tile('ph:squares-four', 'joriy', 'cur')}${tile('ph:gauge', 'gauge')}${tile('ph:house-simple', 'house')}${tile('ph:layout', 'layout')}</div>
+    <div class="rowline"><div class="rowlbl">Materiallar</div>
+      ${tile('ph:stack', 'joriy', 'cur')}${tile('ph:swatches', 'swatches')}${tile('ph:stack-simple', 'simple')}${tile('ph:rows', 'rows')}${tile('ph:cards', 'cards')}</div>
+    <div class="rowline"><div class="rowlbl">Tayyor mahsulot</div>
+      ${tile('ph:package', 'joriy', 'cur')}${tile('ph:t-shirt', 't-shirt')}${tile('ph:cube', 'cube')}${tile('ph:shopping-bag-open', 'bag')}${tile('ph:archive', 'archive')}</div>
+    <div class="rowline"><div class="rowlbl">Ishlab chiqarish</div>
+      ${tile('ph:factory', 'joriy', 'cur')}${tile('ph:buildings', 'buildings')}${tile('ph:gear-six', 'gear')}${tile('ph:hammer', 'hammer')}</div>
+    <div class="rowline"><div class="rowlbl">Xodimlar</div>
+      ${tile('ph:users', 'joriy', 'cur')}${tile('ph:users-three', 'users-3')}${tile('ph:identification-badge', 'badge')}${tile('ph:user-list', 'list')}${tile('ph:address-book', 'book')}</div>
+    <div class="rowline"><div class="rowlbl">Buyurtmalar</div>
+      ${tile('ph:shopping-cart', 'joriy', 'cur')}${tile('ph:clipboard-text', 'clipboard')}${tile('ph:list-checks', 'checks')}${tile('ph:shopping-cart-simple', 'simple')}${tile('ph:notepad', 'notepad')}</div>
+    <div class="rowline"><div class="rowlbl">Hisobotlar</div>
+      ${tile('ph:chart-bar', 'joriy', 'cur')}${tile('ph:chart-line-up', 'line-up')}${tile('ph:chart-pie-slice', 'pie')}${tile('ph:presentation-chart', 'present')}${tile('ph:chart-donut', 'donut')}</div>
+    <div class="rowline"><div class="rowlbl">Tikuvchilik bonuslari</div>
+      ${tile('ph:coat-hanger', 'ilgak')}${tile('ph:dress', "ko'ylak")}${tile('ph:needle', 'igna')}${tile('ph:scissors', 'qaychi')}${tile('ph:swatches', 'namunalar')}</div>
+    <div class="note">
+      Demak reja: asos — <b>bitta set</b>; «yoqmadi» degan har bir ikon uchun avval shu yerdan muqobil tanlaymiz.
+      Faqat set ichida topilmasa, istisno sifatida ikkinchi setga murojaat qilamiz (markaziy icons.ts orqali, o'lcham normalizatsiya bilan).
+    </div>
+  </div>`);
+</script>
+</body>
+</html>
