@@ -31,7 +31,7 @@ services:
     working_dir: /var/www
     command: sh -c "npm install && npm run start:dev"
     ports:
-      - '${PORT:-3000}:3000'
+      - '${API_PORT:-3000}:3000'
     env_file:
       - .env
     volumes:
@@ -41,6 +41,32 @@ services:
       - limone-node-modules:/var/www/node_modules
     depends_on:
       postgres:
+        condition: service_healthy
+    healthcheck:
+      # Healthy once the API answers — also serializes npm install against
+      # the admin service (both write the same node_modules volume).
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:3000/api']
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+    networks:
+      - limone
+
+  admin:
+    image: node:24-alpine
+    container_name: limone-admin
+    restart: unless-stopped
+    # Standalone frontend project: its own package.json and node_modules.
+    working_dir: /var/www/apps/admin
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - '${ADMIN_PORT:-4200}:4200'
+    volumes:
+      - ./:/var/www
+      - limone-admin-node-modules:/var/www/apps/admin/node_modules
+    depends_on:
+      node:
         condition: service_healthy
     networks:
       - limone
@@ -86,3 +112,4 @@ volumes:
   limone-postgres-data:
   limone-pgadmin-data:
   limone-node-modules:
+  limone-admin-node-modules:
