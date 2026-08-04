@@ -9,7 +9,6 @@ export const userFields = {
   phone: z
     .string()
     .trim()
-    .regex(/^[+\d][\d\s()-]{6,}$/)
-    .max(20),
+    .regex(/^\+?\d{7,15}$/),
   email: z.email().max(150),
 };
