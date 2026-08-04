@@ -41,6 +41,21 @@ export class RefreshToken {
   @Column({ name: 'user_agent', type: 'varchar', nullable: true })
   userAgent!: string | null;
 
+  @Column({ type: 'varchar', length: 45, nullable: true })
+  ip!: string | null;
+
+  @Column({ type: 'varchar', length: 40, nullable: true })
+  browser!: string | null;
+
+  @Column({ type: 'varchar', length: 40, nullable: true })
+  os!: string | null;
+
+  @Column({ name: 'device_type', type: 'varchar', length: 10, nullable: true })
+  deviceType!: string | null;
+
+  @Column({ type: 'varchar', length: 80, nullable: true })
+  location!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

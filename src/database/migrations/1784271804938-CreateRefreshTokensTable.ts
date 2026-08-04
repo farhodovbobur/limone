@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateRefreshTokensTable1784271804938 implements MigrationInterface {
@@ -14,6 +13,11 @@ export class CreateRefreshTokensTable1784271804938 implements MigrationInterface
           "revoked_at" TIMESTAMP WITH TIME ZONE,
           "replaced_by" integer,
           "user_agent" character varying,
+          "ip" character varying(45),
+          "browser" character varying(40),
+          "os" character varying(40),
+          "device_type" character varying(10),
+          "location" character varying(80),
           "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
           CONSTRAINT "PK_7d8bee0204106019488c4c50ffa" PRIMARY KEY ("id")
       )`,
