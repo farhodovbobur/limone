@@ -11,8 +11,7 @@ interface Crumb {
 
 function crumbsFor(pathname: string): Crumb[] {
   if (pathname === '/') return [{ labelKey: 'nav.dashboard' }];
-  if (pathname.startsWith('/change-password'))
-    return [{ labelKey: 'cp.title' }];
+  if (pathname.startsWith('/profile')) return [{ labelKey: 'shell.profile' }];
   const active = findActiveNav(pathname);
   if (!active) return [];
   // Sub-path after the module root decides the action crumb:

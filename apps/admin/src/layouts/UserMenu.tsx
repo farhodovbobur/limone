@@ -40,11 +40,15 @@ export function UserMenu() {
         </div>
       </div>
       <div className="mx-1 my-1 h-px bg-line" />
-      <MenuItem icon={<Icons.user size={17} />} label={t('shell.profile')} />
       <MenuItem
-        icon={<Icons.settings size={17} />}
+        icon={<Icons.user size={17} />}
+        label={t('shell.profile')}
+        onClick={() => void navigate('/profile')}
+      />
+      <MenuItem
+        icon={<Icons.key size={17} />}
         label={t('cp.title')}
-        onClick={() => void navigate('/change-password')}
+        onClick={() => void navigate('/profile?tab=password')}
       />
       <div className="mx-1 my-1 h-px bg-line" />
       <MenuItem
