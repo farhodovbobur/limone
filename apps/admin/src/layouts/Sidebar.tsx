@@ -17,7 +17,7 @@ export function Sidebar() {
 
   return (
     <nav className="fixed inset-y-0 left-0 z-30 flex w-62 flex-col border-r border-cream-200 bg-cream-100 shadow-sidebar">
-      <div className="border-b justify-center items-center justify-items-center border-cream-200 px-5 py-5">
+      <div className="flex items-center justify-center border-b border-cream-200 px-5 py-5">
         <img
           src={logo}
           alt="LIMONÉ APPAREL"
