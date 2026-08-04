@@ -1,10 +1,15 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
   HttpStatus,
+  Ip,
+  Param,
+  ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -14,6 +19,7 @@ import type { AccessTokenPayload } from './auth.service';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -23,14 +29,25 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto, @Headers('user-agent') userAgent?: string) {
-    return this.authService.login(dto.username, dto.password, userAgent);
+  login(
+    @Body() dto: LoginDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent?: string,
+  ) {
+    return this.authService.login(dto.username, dto.password, {
+      userAgent,
+      ip,
+    });
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refresh(@Body() dto: RefreshDto, @Headers('user-agent') userAgent?: string) {
-    return this.authService.refresh(dto.refreshToken, userAgent);
+  refresh(
+    @Body() dto: RefreshDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent?: string,
+  ) {
+    return this.authService.refresh(dto.refreshToken, { userAgent, ip });
   }
 
   @Post('logout')
@@ -59,5 +76,41 @@ export class AuthController {
   @ApiBearerAuth()
   me(@CurrentUser() user: AccessTokenPayload) {
     return this.authService.me(user.sub);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  updateMe(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(user.sub, dto);
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  sessions(@CurrentUser() user: AccessTokenPayload) {
+    return this.authService.listSessions(user.sub, user.sid);
+  }
+
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  revokeSession(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    return this.authService.revokeSession(user.sub, id, user.sid);
+  }
+
+  @Post('sessions/revoke-others')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  revokeOtherSessions(@CurrentUser() user: AccessTokenPayload): Promise<void> {
+    return this.authService.revokeOtherSessions(user.sub, user.sid);
   }
 }
