@@ -1,4 +1,8 @@
-const SIZES = { md: 'h-8 w-8 text-[13px]', lg: 'h-10 w-10 text-[15px]' };
+const SIZES = {
+  md: 'h-8 w-8 text-[13px]',
+  lg: 'h-10 w-10 text-[15px]',
+  xl: 'h-16 w-16 rounded-[10px] text-[22px]',
+};
 
 export function Avatar({
   first,
