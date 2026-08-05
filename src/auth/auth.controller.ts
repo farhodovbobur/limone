@@ -21,6 +21,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { CredentialThrottlerGuard } from '../shared/guards/credential-throttler.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
@@ -29,6 +30,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(CredentialThrottlerGuard)
   login(
     @Body() dto: LoginDto,
     @Ip() ip: string,
@@ -58,7 +60,7 @@ export class AuthController {
 
   @Post('change-password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CredentialThrottlerGuard)
   @ApiBearerAuth()
   changePassword(
     @CurrentUser() user: AccessTokenPayload,
