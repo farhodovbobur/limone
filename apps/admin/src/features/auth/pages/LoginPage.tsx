@@ -34,12 +34,15 @@ export function LoginPage() {
     },
   });
 
+  const status = login.error instanceof AxiosError ? login.error.response?.status : null;
   const errorKey =
-    login.error instanceof AxiosError && login.error.response?.status === 401
+    status === 401
       ? 'login.invalidCredentials'
-      : login.error
-        ? 'login.serverError'
-        : null;
+      : status === 429
+        ? 'login.tooManyAttempts'
+        : login.error
+          ? 'login.serverError'
+          : null;
 
   const reason = new URLSearchParams(location.search).get('reason');
   const endedKey = errorKey

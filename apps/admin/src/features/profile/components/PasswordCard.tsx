@@ -47,12 +47,16 @@ export function PasswordCard() {
     },
   });
 
+  const status =
+    change.error instanceof AxiosError ? change.error.response?.status : null;
   const errorKey =
-    change.error instanceof AxiosError && change.error.response?.status === 400
+    status === 400
       ? 'cp.wrongCurrent'
-      : change.error
-        ? 'login.serverError'
-        : null;
+      : status === 429
+        ? 'login.tooManyAttempts'
+        : change.error
+          ? 'login.serverError'
+          : null;
 
   const checks = [
     { ok: newPassword.length >= 8, label: t('profile.req8') },
