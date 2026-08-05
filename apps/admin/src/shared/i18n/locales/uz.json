@@ -40,7 +40,8 @@
       "usernameMin": "Kamida 3 ta belgi",
       "passwordMin": "Kamida 3 ta belgi"
     },
-    "sessionExpired": "Sessiya muddati tugadi. Qaytadan kiring."
+    "sessionExpired": "Sessiya muddati tugadi. Qaytadan kiring.",
+    "tooManyAttempts": "Juda ko'p urinish. Bir necha daqiqa kutib, qaytadan urinib ko'ring."
   },
   "staff": {
     "title": "Xodimlar",

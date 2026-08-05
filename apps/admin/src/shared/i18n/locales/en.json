@@ -40,7 +40,8 @@
       "usernameMin": "At least 3 characters",
       "passwordMin": "At least 3 characters"
     },
-    "sessionExpired": "Your session has expired. Please sign in again."
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "tooManyAttempts": "Too many attempts. Please wait a few minutes and try again."
   },
   "staff": {
     "title": "Staff",
