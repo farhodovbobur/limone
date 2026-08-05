@@ -41,10 +41,14 @@ export function LoginPage() {
         ? 'login.serverError'
         : null;
 
-  // Set by the axios interceptor when silent refresh fails.
-  const sessionExpired =
-    !errorKey &&
-    new URLSearchParams(location.search).get('reason') === 'expired';
+  const reason = new URLSearchParams(location.search).get('reason');
+  const endedKey = errorKey
+    ? null
+    : reason === 'idle'
+      ? 'session.endedIdle'
+      : reason === 'expired'
+        ? 'login.sessionExpired'
+        : null;
 
   return (
     <div className="relative w-100 max-w-full rounded-xl border border-line bg-surface p-9 pb-8 shadow-lg">
@@ -60,13 +64,8 @@ export function LoginPage() {
       {errorKey && (
         <Alert type="error" showIcon title={t(errorKey)} className="mb-4" />
       )}
-      {sessionExpired && (
-        <Alert
-          type="warning"
-          showIcon
-          title={t('login.sessionExpired')}
-          className="mb-4"
-        />
+      {endedKey && (
+        <Alert type="warning" showIcon title={t(endedKey)} className="mb-4" />
       )}
 
       <Form
