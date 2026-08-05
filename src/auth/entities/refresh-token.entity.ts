@@ -3,11 +3,18 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  IsNull,
   JoinColumn,
   ManyToOne,
+  MoreThan,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+
+export const liveSession = () => ({
+  revokedAt: IsNull(),
+  expiresAt: MoreThan(new Date()),
+});
 
 @Entity('refresh_tokens')
 export class RefreshToken {

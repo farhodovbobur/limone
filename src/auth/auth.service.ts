@@ -13,7 +13,6 @@ import { createHash, randomUUID } from 'crypto';
 import {
   EntityManager,
   IsNull,
-  MoreThan,
   Not,
   QueryFailedError,
   Repository,
@@ -21,7 +20,7 @@ import {
 import { parseUserAgent } from '../shared/utils/user-agent.util';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { User } from '../users/entities/user.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
+import { liveSession, RefreshToken } from './entities/refresh-token.entity';
 
 export interface AccessTokenPayload {
   sub: number;
@@ -71,7 +70,12 @@ export class AuthService {
     );
     const accessToken = await this.signAccessToken(user, row.id);
 
-    return { accessToken, refreshToken, user: this.toSafeUser(user) };
+    return {
+      accessToken,
+      refreshToken,
+      sessionIdleMs: this.idleWindowMs(row),
+      user: this.toSafeUser(user),
+    };
   }
 
   async refresh(token: string, meta: SessionMeta = {}) {
@@ -85,8 +89,9 @@ export class AuthService {
     }
 
     if (row.revokedAt) {
-      // A rotated token came back — assume theft and kill every session.
-      await this.revokeAllUserTokens(row.userId);
+      if (row.replacedById !== null) {
+        await this.revokeAllUserTokens(row.userId);
+      }
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -99,7 +104,7 @@ export class AuthService {
     }
 
     // New row + old-row revoke must land together, or two tokens stay alive.
-    const { refreshToken, sid } =
+    const { refreshToken, sid, sessionIdleMs } =
       await this.refreshTokenRepo.manager.transaction(async (em) => {
         const { token: newToken, row: newRow } = await this.issueRefreshToken(
           user,
@@ -110,11 +115,15 @@ export class AuthService {
           revokedAt: new Date(),
           replacedById: newRow.id,
         });
-        return { refreshToken: newToken, sid: newRow.id };
+        return {
+          refreshToken: newToken,
+          sid: newRow.id,
+          sessionIdleMs: this.idleWindowMs(newRow),
+        };
       });
 
     const accessToken = await this.signAccessToken(user, sid);
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, sessionIdleMs };
   }
 
   async changePassword(
@@ -182,14 +191,10 @@ export class AuthService {
 
   async listSessions(userId: number, sid?: number) {
     const rows = await this.refreshTokenRepo.find({
-      where: {
-        userId,
-        revokedAt: IsNull(),
-        expiresAt: MoreThan(new Date()),
-      },
+      where: { userId, ...liveSession() },
       order: { createdAt: 'DESC' },
     });
-    return rows.map((r) => ({
+    const sessions = rows.map((r) => ({
       id: r.id,
       userAgent: r.userAgent,
       ip: r.ip,
@@ -200,6 +205,7 @@ export class AuthService {
       createdAt: r.createdAt,
       current: r.id === sid,
     }));
+    return sessions.sort((a, b) => Number(b.current) - Number(a.current));
   }
 
   async revokeSession(
@@ -224,6 +230,10 @@ export class AuthService {
       { userId, revokedAt: IsNull(), id: Not(sid ?? -1) },
       { revokedAt: new Date() },
     );
+  }
+
+  private idleWindowMs(row: RefreshToken): number {
+    return Math.max(0, row.expiresAt.getTime() - Date.now());
   }
 
   private signAccessToken(user: User, sid: number): Promise<string> {
