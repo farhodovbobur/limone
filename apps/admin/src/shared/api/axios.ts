@@ -1,6 +1,11 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { env } from '../../config/env';
-import { useAuthStore } from '../../features/auth/store/authStore';
+import {
+  sessionIdleLimit,
+  useAuthStore,
+} from '../../features/auth/store/authStore';
+import { isIdleExpired } from '../session/activity';
+import { endSession } from '../session/endSession';
 
 export const api = axios.create({ baseURL: env.apiBaseUrl });
 
@@ -16,19 +21,22 @@ api.interceptors.request.use((config) => {
 
 let refreshPromise: Promise<string> | null = null;
 
-function refreshAccessToken(): Promise<string> {
+export function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     const { refreshToken } = useAuthStore.getState();
     if (!refreshToken) {
       return Promise.reject(new Error('No refresh token'));
     }
     refreshPromise = axios
-      .post<{ accessToken: string; refreshToken: string }>(
-        `${env.apiBaseUrl}/auth/refresh`,
-        { refreshToken },
-      )
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+        sessionIdleMs: number;
+      }>(`${env.apiBaseUrl}/auth/refresh`, { refreshToken })
       .then(({ data }) => {
-        useAuthStore.getState().setTokens(data.accessToken, data.refreshToken);
+        useAuthStore
+          .getState()
+          .setTokens(data.accessToken, data.refreshToken, data.sessionIdleMs);
         return data.accessToken;
       })
       .finally(() => {
@@ -55,14 +63,18 @@ api.interceptors.response.use(
       throw error;
     }
 
+    if (isIdleExpired(sessionIdleLimit())) {
+      void endSession('idle');
+      throw error;
+    }
+
     original._retry = true;
     try {
       const token = await refreshAccessToken();
       original.headers.Authorization = `Bearer ${token}`;
       return api(original);
     } catch {
-      useAuthStore.getState().clearSession();
-      window.location.assign('/login?reason=expired');
+      void endSession('expired');
       throw error;
     }
   },

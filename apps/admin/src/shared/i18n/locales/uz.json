@@ -160,5 +160,12 @@
     "sessionNote": "Faolsizlikda sessiya 2 soatdan keyin avtomatik yopiladi.",
     "thLocation": "Joylashuv",
     "localNetwork": "Lokal tarmoq"
+  },
+  "session": {
+    "idleTitle": "Sessiya tugayapti",
+    "idleBody": "Uzoq vaqt harakat bo'lmadi. Avtomatik chiqishgacha:",
+    "stay": "Davom etish",
+    "signOutNow": "Hozir chiqish",
+    "endedIdle": "Uzoq vaqt harakatsizlik tufayli sessiya yopildi. Qaytadan kiring."
   }
 }

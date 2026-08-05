@@ -160,5 +160,12 @@
     "sessionNote": "Idle sessions close automatically after 2 hours.",
     "thLocation": "Location",
     "localNetwork": "Local network"
+  },
+  "session": {
+    "idleTitle": "Session is ending",
+    "idleBody": "No activity for a while. Signing out in:",
+    "stay": "Stay signed in",
+    "signOutNow": "Sign out now",
+    "endedIdle": "Session closed after a long period of inactivity. Please sign in again."
   }
 }

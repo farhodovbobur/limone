@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_IDLE_LIMIT_MS } from '../../../shared/session/activity';
 
 export interface AuthUser {
   id: number;
@@ -12,15 +13,22 @@ export interface AuthUser {
 interface AuthSession {
   accessToken: string;
   refreshToken: string;
+  sessionIdleMs: number;
   user: AuthUser;
 }
 
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
+  tokenIssuedAt: number | null;
+  idleLimitMs: number | null;
   user: AuthUser | null;
   setSession: (session: AuthSession) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (
+    accessToken: string,
+    refreshToken: string,
+    sessionIdleMs: number,
+  ) => void;
   setUser: (user: AuthUser) => void;
   clearSession: () => void;
 }
@@ -32,14 +40,41 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       accessToken: null,
       refreshToken: null,
+      tokenIssuedAt: null,
+      idleLimitMs: null,
       user: null,
-      setSession: (session) => set(session),
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken: accessToken, refreshToken: refreshToken }),
+      setSession: ({ sessionIdleMs, ...session }) =>
+        set({
+          ...session,
+          tokenIssuedAt: Date.now(),
+          idleLimitMs: sessionIdleMs,
+        }),
+      setTokens: (accessToken, refreshToken, sessionIdleMs) =>
+        set({
+          accessToken,
+          refreshToken,
+          tokenIssuedAt: Date.now(),
+          idleLimitMs: sessionIdleMs,
+        }),
       setUser: (user) => set({ user }),
       clearSession: () =>
-        set({ accessToken: null, refreshToken: null, user: null }),
+        set({
+          accessToken: null,
+          refreshToken: null,
+          tokenIssuedAt: null,
+          idleLimitMs: null,
+          user: null,
+        }),
     }),
     { name: 'limone-auth' },
   ),
 );
+
+window.addEventListener('storage', (event) => {
+  if (event.key === 'limone-auth') {
+    void useAuthStore.persist.rehydrate();
+  }
+});
+
+export const sessionIdleLimit = (): number =>
+  useAuthStore.getState().idleLimitMs ?? DEFAULT_IDLE_LIMIT_MS;

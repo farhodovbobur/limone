@@ -5,6 +5,7 @@ import type { LoginInput } from '../schemas/login.schema';
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  sessionIdleMs: number;
   user: AuthUser;
 }
 
