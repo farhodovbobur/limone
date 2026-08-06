@@ -72,7 +72,8 @@
     "created": "{{name}} added",
     "saved": "{{name}} saved",
     "deactivated": "{{name}} deactivated",
-    "activated": "{{name}} activated"
+    "activated": "{{name}} activated",
+    "cannotDeactivateSelf": "You cannot deactivate your own account"
   },
   "drawer": {
     "addTitle": "New user",
@@ -116,7 +117,6 @@
   },
   "password": {
     "req6": "at least 6 characters",
-    "req8": "at least 8 characters",
     "reqMix": "mix of letters and digits",
     "reqSpecial": "special character (recommended)",
     "strength1": "weak",

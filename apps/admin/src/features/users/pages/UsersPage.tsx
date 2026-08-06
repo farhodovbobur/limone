@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs } from '../../../layouts/Breadcrumbs';
+import { useAuthStore } from '../../auth/store/authStore';
 import { Avatar } from '../../../shared/components/Avatar';
 import { Icons } from '../../../shared/icons';
 import { Hangtag } from '../../../shared/components/Hangtag';
@@ -14,6 +15,7 @@ export function UsersPage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [drawer, setDrawer] = useState<
@@ -111,11 +113,18 @@ export function UsersPage() {
           </button>
           <button
             type="button"
-            title={u.isActive ? t('users.deactivate') : t('users.activate')}
+            disabled={u.id === currentUserId}
+            title={
+              u.id === currentUserId
+                ? t('users.cannotDeactivateSelf')
+                : u.isActive
+                  ? t('users.deactivate')
+                  : t('users.activate')
+            }
             onClick={() => toggleActive.mutate(u)}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg u-focus transition-colors hover:bg-olive-100 active:bg-olive-200 ${
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg u-focus transition-colors enabled:hover:bg-olive-100 enabled:active:bg-olive-200 disabled:cursor-not-allowed disabled:opacity-35 ${
               u.isActive
-                ? 'text-ink-secondary hover:text-olive-800'
+                ? 'text-ink-secondary enabled:hover:text-olive-800'
                 : 'text-success'
             }`}
           >

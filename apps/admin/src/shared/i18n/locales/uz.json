@@ -72,7 +72,8 @@
     "created": "{{name}} qo'shildi",
     "saved": "{{name}} saqlandi",
     "deactivated": "{{name}} o'chirildi",
-    "activated": "{{name}} faollashtirildi"
+    "activated": "{{name}} faollashtirildi",
+    "cannotDeactivateSelf": "O'z hisobingizni o'chira olmaysiz"
   },
   "drawer": {
     "addTitle": "Yangi foydalanuvchi",
@@ -116,7 +117,6 @@
   },
   "password": {
     "req6": "kamida 6 belgi",
-    "req8": "kamida 8 belgi",
     "reqMix": "harf va raqam aralash",
     "reqSpecial": "maxsus belgi (tavsiya etiladi)",
     "strength1": "zaif",
