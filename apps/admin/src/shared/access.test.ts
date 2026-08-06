@@ -50,7 +50,7 @@ const EXPECTED: Record<ModuleKey, Record<Role, boolean>> = {
     sales: false,
     customer: false,
   },
-  staff: {
+  users: {
     admin: true,
     superadmin: true,
     director: false,
@@ -99,8 +99,8 @@ describe('MODULE_ACCESS matrix (PHASE_0 §6)', () => {
   });
 
   it('unknown or missing role sees nothing restricted', () => {
-    expect(canAccess('staff', undefined)).toBe(false);
-    expect(canAccess('staff', 'ghost')).toBe(false);
+    expect(canAccess('users', undefined)).toBe(false);
+    expect(canAccess('users', 'ghost')).toBe(false);
     // dashboard is 'authenticated' — the real gate is RequireAuth (token),
     // not the role, so visibility is true even without one.
     expect(canAccess('dashboard', undefined)).toBe(true);
@@ -108,11 +108,11 @@ describe('MODULE_ACCESS matrix (PHASE_0 §6)', () => {
 });
 
 describe('isAdminOnly (sidebar lock badge)', () => {
-  it('flags exactly the staff module', () => {
+  it('flags exactly the users module', () => {
     const flagged = (Object.keys(MODULE_ACCESS) as ModuleKey[]).filter((k) =>
       isAdminOnly(k),
     );
-    expect(flagged).toEqual(['staff']);
+    expect(flagged).toEqual(['users']);
   });
 });
 
