@@ -170,13 +170,18 @@ export class AuthService {
 
   // Own profile only; username/role/isActive stay admin-managed (users CRUD).
   async updateProfile(userId: number, dto: UpdateProfileDto) {
+    const patch: Partial<User> = {};
+    if (dto.firstName !== undefined) patch.firstName = dto.firstName;
+    if (dto.lastName !== undefined) patch.lastName = dto.lastName ?? null;
+    if (dto.phone !== undefined) patch.phone = dto.phone ?? null;
+    if (dto.email !== undefined) patch.email = dto.email ?? null;
+
+    if (Object.keys(patch).length === 0) {
+      return this.me(userId);
+    }
+
     try {
-      await this.userRepo.update(userId, {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone ?? null,
-        email: dto.email ?? null,
-      });
+      await this.userRepo.update(userId, patch);
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
