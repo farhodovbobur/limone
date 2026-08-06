@@ -56,7 +56,7 @@ export function PersonalInfoCard({ user }: { user: ProfileUser }) {
     onError: (err) => {
       const conflict =
         err instanceof AxiosError && err.response?.status === 409;
-      message.error(t(conflict ? 'drawer.conflict' : 'staff.errBody'));
+      message.error(t(conflict ? 'drawer.conflict' : 'users.errBody'));
     },
   });
 
@@ -90,7 +90,7 @@ export function PersonalInfoCard({ user }: { user: ProfileUser }) {
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium text-ink-secondary u-focus transition-colors hover:bg-olive-100 hover:text-olive-800 active:bg-olive-200"
             >
               <Icons.edit size={14} />
-              {t('staff.edit')}
+              {t('users.edit')}
             </button>
           )}
         </div>

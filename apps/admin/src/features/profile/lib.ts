@@ -121,14 +121,3 @@ export function sessionTime(
   }
   return `${d.toLocaleDateString(lang, { day: 'numeric', month: 'short' })} ${time}`;
 }
-
-// 0–4 score for the strength meter; blocking rule stays min-8 (backend).
-export function passwordStrength(pw: string): number {
-  if (!pw) return 0;
-  let score = 0;
-  if (pw.length >= 8) score += 1;
-  if (/[a-zA-Z]/.test(pw) && /\d/.test(pw)) score += 1;
-  if (pw.length >= 12) score += 1;
-  if (/[^a-zA-Z0-9]/.test(pw)) score += 1;
-  return score;
-}
