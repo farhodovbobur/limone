@@ -5,7 +5,7 @@
   },
   "nav": {
     "dashboard": "Boshqaruv paneli",
-    "staff": "Xodimlar",
+    "users": "Foydalanuvchilar",
     "orders": "Buyurtmalar",
     "reports": "Hisobotlar"
   },
@@ -43,12 +43,12 @@
     "sessionExpired": "Sessiya muddati tugadi. Qaytadan kiring.",
     "tooManyAttempts": "Juda ko'p urinish. Bir necha daqiqa kutib, qaytadan urinib ko'ring."
   },
-  "staff": {
-    "title": "Xodimlar",
+  "users": {
+    "title": "Foydalanuvchilar",
     "lead": "Tizim foydalanuvchilarini boshqaring — rollar, kirish huquqi va holat. Faqat administratorlar uchun.",
     "search": "Ism yoki login bo'yicha qidirish",
     "allRoles": "Barcha rollar",
-    "add": "Xodim qo'shish",
+    "add": "Foydalanuvchi qo'shish",
     "th": {
       "name": "Ism",
       "username": "Login",
@@ -62,9 +62,9 @@
     "edit": "Tahrirlash",
     "deactivate": "O'chirish",
     "activate": "Faollashtirish",
-    "showing": "Ko'rsatildi {{from}}–{{to}} / {{total}} xodim",
-    "emptyTitle": "Xodimlar topilmadi",
-    "emptyBody": "Qidiruv yoki filtrga mos xodim yo'q. Shartlarni o'zgartiring yoki yangi xodim qo'shing.",
+    "showing": "Ko'rsatildi {{from}}–{{to}} / {{total}} foydalanuvchi",
+    "emptyTitle": "Foydalanuvchilar topilmadi",
+    "emptyBody": "Qidiruv yoki filtrga mos foydalanuvchi yo'q. Shartlarni o'zgartiring yoki yangi foydalanuvchi qo'shing.",
     "clearFilters": "Filtrlarni tozalash",
     "errTitle": "Ma'lumotlarni yuklab bo'lmadi",
     "errBody": "Serverga ulanishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
@@ -75,9 +75,9 @@
     "activated": "{{name}} faollashtirildi"
   },
   "drawer": {
-    "addTitle": "Yangi xodim",
+    "addTitle": "Yangi foydalanuvchi",
     "addSub": "Tizimga yangi foydalanuvchi qo'shing.",
-    "editTitle": "Xodimni tahrirlash",
+    "editTitle": "Foydalanuvchini tahrirlash",
     "editSub": "Foydalanuvchi ma'lumotlarini yangilang.",
     "firstName": "Ism",
     "lastName": "Familiya",
@@ -92,7 +92,6 @@
     "cancel": "Bekor qilish",
     "save": "Saqlash",
     "create": "Qo'shish",
-    "pwHint": "Kamida 8 ta belgi.",
     "vRequired": "Bu maydon majburiy",
     "vUserTaken": "Bu login band",
     "vUserShort": "Kamida 3 ta belgi",
@@ -114,6 +113,16 @@
     "success": "Parol yangilandi. Qaytadan kiring.",
     "wrongCurrent": "Joriy parol noto'g'ri",
     "vMismatch": "Parollar mos emas"
+  },
+  "password": {
+    "req6": "kamida 6 belgi",
+    "req8": "kamida 8 belgi",
+    "reqMix": "harf va raqam aralash",
+    "reqSpecial": "maxsus belgi (tavsiya etiladi)",
+    "strength1": "zaif",
+    "strength2": "o'rtacha",
+    "strength3": "yaxshi",
+    "strength4": "kuchli"
   },
   "roles": {
     "admin": "Administrator",
@@ -139,14 +148,7 @@
     "immutableHint": "Login o'zgarmas — administrator bilan bog'laning",
     "saved": "Profil saqlandi",
     "reqTitle": "Parol talablari",
-    "req8": "kamida 8 belgi",
-    "reqMix": "harf va raqam aralash",
-    "reqSpecial": "maxsus belgi (tavsiya etiladi)",
     "reqNote": "Parol o'zgargach barcha sessiyalar yopiladi — qaytadan kirasiz.",
-    "strength1": "zaif",
-    "strength2": "o'rtacha",
-    "strength3": "yaxshi",
-    "strength4": "kuchli",
     "sessions": "Sessiyalar",
     "thDevice": "Qurilma",
     "thActivity": "Oxirgi faollik",

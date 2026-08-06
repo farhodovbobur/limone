@@ -5,7 +5,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "staff": "Staff",
+    "users": "Users",
     "orders": "Orders",
     "reports": "Reports"
   },
@@ -43,12 +43,12 @@
     "sessionExpired": "Your session has expired. Please sign in again.",
     "tooManyAttempts": "Too many attempts. Please wait a few minutes and try again."
   },
-  "staff": {
-    "title": "Staff",
+  "users": {
+    "title": "Users",
     "lead": "Manage system users — roles, access and status. Admin-only screen.",
     "search": "Search by name or username",
     "allRoles": "All roles",
-    "add": "Add staff",
+    "add": "Add user",
     "th": {
       "name": "Name",
       "username": "Username",
@@ -62,9 +62,9 @@
     "edit": "Edit",
     "deactivate": "Deactivate",
     "activate": "Activate",
-    "showing": "Showing {{from}}–{{to}} of {{total}} staff",
-    "emptyTitle": "No staff found",
-    "emptyBody": "No staff match your search or filter. Try adjusting the criteria or add someone new.",
+    "showing": "Showing {{from}}–{{to}} of {{total}} users",
+    "emptyTitle": "No users found",
+    "emptyBody": "No users match your search or filter. Try adjusting the criteria or add someone new.",
     "clearFilters": "Clear filters",
     "errTitle": "Couldn't load data",
     "errBody": "Something went wrong connecting to the server. Please try again.",
@@ -75,9 +75,9 @@
     "activated": "{{name}} activated"
   },
   "drawer": {
-    "addTitle": "New staff member",
+    "addTitle": "New user",
     "addSub": "Add a new user to the system.",
-    "editTitle": "Edit staff member",
+    "editTitle": "Edit user",
     "editSub": "Update this user's details.",
     "firstName": "First name",
     "lastName": "Last name",
@@ -91,8 +91,7 @@
     "activeSub": "A deactivated user can't sign in.",
     "cancel": "Cancel",
     "save": "Save changes",
-    "create": "Add staff",
-    "pwHint": "At least 8 characters.",
+    "create": "Add user",
     "vRequired": "This field is required",
     "vUserTaken": "Username is taken",
     "vUserShort": "At least 3 characters",
@@ -114,6 +113,16 @@
     "success": "Password updated. Please sign in again.",
     "wrongCurrent": "Current password is incorrect",
     "vMismatch": "Passwords do not match"
+  },
+  "password": {
+    "req6": "at least 6 characters",
+    "req8": "at least 8 characters",
+    "reqMix": "mix of letters and digits",
+    "reqSpecial": "special character (recommended)",
+    "strength1": "weak",
+    "strength2": "fair",
+    "strength3": "good",
+    "strength4": "strong"
   },
   "roles": {
     "admin": "Admin",
@@ -139,14 +148,7 @@
     "immutableHint": "The login can't be changed — contact an administrator",
     "saved": "Profile saved",
     "reqTitle": "Password requirements",
-    "req8": "at least 8 characters",
-    "reqMix": "mix of letters and digits",
-    "reqSpecial": "special character (recommended)",
     "reqNote": "Changing the password closes every session — you'll sign in again.",
-    "strength1": "weak",
-    "strength2": "fair",
-    "strength3": "good",
-    "strength4": "strong",
     "sessions": "Sessions",
     "thDevice": "Device",
     "thActivity": "Last activity",
