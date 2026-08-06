@@ -9,19 +9,14 @@ import { authApi } from '../../auth/api/authApi';
 import { useAuthStore } from '../../auth/store/authStore';
 import { Req } from '../../../shared/components/Req';
 import { Icons } from '../../../shared/icons';
-import { passwordStrength } from '../lib';
+import {
+  PasswordMeter,
+  PasswordRules,
+} from '../../../shared/components/PasswordStrength';
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from '../schemas/change-password.schema';
-
-const STRENGTH_COLORS = [
-  '',
-  'bg-danger',
-  'bg-warning',
-  'bg-success',
-  'bg-success',
-];
 
 export function PasswordCard() {
   const { t } = useTranslation();
@@ -33,7 +28,6 @@ export function PasswordCard() {
     defaultValues: { currentPassword: '', newPassword: '', confirm: '' },
   });
   const newPassword = useWatch({ control, name: 'newPassword' }) ?? '';
-  const strength = passwordStrength(newPassword);
 
   const change = useMutation({
     mutationFn: (v: ChangePasswordFormValues) =>
@@ -57,18 +51,6 @@ export function PasswordCard() {
         : change.error
           ? 'login.serverError'
           : null;
-
-  const checks = [
-    { ok: newPassword.length >= 8, label: t('profile.req8') },
-    {
-      ok: /[a-zA-Z]/.test(newPassword) && /\d/.test(newPassword),
-      label: t('profile.reqMix'),
-    },
-    {
-      ok: /[^a-zA-Z0-9]/.test(newPassword),
-      label: t('profile.reqSpecial'),
-    },
-  ];
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
@@ -133,20 +115,8 @@ export function PasswordCard() {
           {newPassword && (
             <div className="flex items-center gap-4">
               <span className="w-44 flex-none" />
-              <div className="flex flex-1 items-center gap-2.5">
-                <div className="flex flex-1 gap-1">
-                  {[1, 2, 3, 4].map((i) => (
-                    <span
-                      key={i}
-                      className={`h-1 flex-1 rounded-full ${
-                        i <= strength ? STRENGTH_COLORS[strength] : 'bg-line'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-[11.5px] text-ink-secondary">
-                  {t(`profile.strength${Math.max(strength, 1)}`)}
-                </span>
+              <div className="flex-1">
+                <PasswordMeter value={newPassword} />
               </div>
             </div>
           )}
@@ -165,24 +135,7 @@ export function PasswordCard() {
           <span className="text-sm font-medium">{t('profile.reqTitle')}</span>
         </div>
         <div className="flex flex-col gap-2.5 px-5 py-4">
-          {checks.map((c) => (
-            <div key={c.label} className="flex items-center gap-2.5">
-              {c.ok ? (
-                <Icons.checkCircle
-                  size={16}
-                  weight="fill"
-                  className="text-success"
-                />
-              ) : (
-                <Icons.circle size={16} className="text-ink-tertiary/50" />
-              )}
-              <span
-                className={`text-[12.5px] ${c.ok ? 'text-ink-secondary' : 'text-ink-tertiary'}`}
-              >
-                {c.label}
-              </span>
-            </div>
-          ))}
+          <PasswordRules value={newPassword} />
           <div className="my-1 h-px bg-line/60" />
           <p className="m-0 text-xs leading-relaxed text-ink-tertiary">
             {t('profile.reqNote')}
