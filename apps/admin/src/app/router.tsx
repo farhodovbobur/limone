@@ -3,7 +3,7 @@ import { RequireAuth } from '../features/auth/components/RequireAuth';
 import { RequireRole } from '../features/auth/components/RequireRole';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { ProfilePage } from '../features/profile/pages/ProfilePage';
-import { StaffPage } from '../features/users/pages/StaffPage';
+import { UsersPage } from '../features/users/pages/UsersPage';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { DashboardHomePage } from '../pages/DashboardHomePage';
@@ -40,7 +40,7 @@ export function AppRoutes() {
           path="change-password"
           element={<Navigate to="/profile?tab=password" replace />}
         />
-        <Route path="staff" element={guarded('staff', <StaffPage />)} />
+        <Route path="users" element={guarded('users', <UsersPage />)} />
         <Route
           path="orders"
           element={guarded('orders', <ModulePlaceholder navKey="orders" />)}

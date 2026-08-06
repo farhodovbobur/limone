@@ -53,19 +53,19 @@ export function ProfilePage() {
             </div>
             <div className="ml-auto flex items-center gap-2">
               <Hangtag>{t(`roles.${user.role}`)}</Hangtag>
-              <Hangtag variant="success">{t('staff.active')}</Hangtag>
+              <Hangtag variant="success">{t('users.active')}</Hangtag>
             </div>
           </>
         ) : profile.isError ? (
           <div className="flex w-full flex-col items-center gap-3 py-2 text-center">
             <p className="m-0 text-[13px] text-ink-secondary">
-              {t('staff.errBody')}
+              {t('users.errBody')}
             </p>
             <Button
               icon={<Icons.retry size={15} />}
               onClick={() => void profile.refetch()}
             >
-              {t('staff.retry')}
+              {t('users.retry')}
             </Button>
           </div>
         ) : (

@@ -26,7 +26,7 @@ export function SessionsCard() {
       void queryClient.invalidateQueries({ queryKey: ['sessions'] });
       message.success(t('profile.revoked'));
     },
-    onError: () => message.error(t('staff.errBody')),
+    onError: () => message.error(t('users.errBody')),
   });
 
   const revokeOthers = useMutation({
@@ -35,7 +35,7 @@ export function SessionsCard() {
       void queryClient.invalidateQueries({ queryKey: ['sessions'] });
       message.success(t('profile.revokedOthers'));
     },
-    onError: () => message.error(t('staff.errBody')),
+    onError: () => message.error(t('users.errBody')),
   });
 
   const rows = sessions.data ?? [];
@@ -65,13 +65,13 @@ export function SessionsCard() {
       ) : sessions.isError ? (
         <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
           <p className="m-0 text-[13px] text-ink-secondary">
-            {t('staff.errBody')}
+            {t('users.errBody')}
           </p>
           <Button
             icon={<Icons.retry size={15} />}
             onClick={() => void sessions.refetch()}
           >
-            {t('staff.retry')}
+            {t('users.retry')}
           </Button>
         </div>
       ) : (

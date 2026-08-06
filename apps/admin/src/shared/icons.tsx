@@ -87,7 +87,7 @@ export const Icons = {
   materials: ph(StackIcon),
   goods: ph(PackageIcon),
   production: ph(FactoryIcon),
-  staff: ph(UsersIcon),
+  users: ph(UsersIcon),
   orders: ph(ShoppingCartIcon),
   reports: ph(ChartBarIcon),
   // Shell
@@ -124,7 +124,7 @@ export const MODULE_ICONS: Record<ModuleKey, AppIcon> = {
   materials: Icons.materials,
   goods: Icons.goods,
   production: Icons.production,
-  staff: Icons.staff,
+  users: Icons.users,
   orders: Icons.orders,
   reports: Icons.reports,
 };

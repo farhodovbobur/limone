@@ -37,7 +37,7 @@ export const MODULE_ACCESS = {
   materials: [...VIEWERS, 'warehouse_keeper', 'workshop_manager'],
   goods: [...VIEWERS, 'warehouse_keeper', 'workshop_manager', 'sales'],
   production: [...VIEWERS, 'workshop_manager', 'worker'],
-  staff: ADMIN_ROLES,
+  users: ADMIN_ROLES,
   orders: [...VIEWERS, 'sales'],
   reports: [...VIEWERS, 'warehouse_keeper', 'workshop_manager', 'sales'],
 } as const satisfies Record<string, readonly Role[] | 'authenticated'>;

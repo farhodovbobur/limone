@@ -14,7 +14,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { key: 'dashboard', path: '/', icon: MODULE_ICONS.dashboard },
-  { key: 'staff', path: '/staff', icon: MODULE_ICONS.staff },
+  { key: 'users', path: '/users', icon: MODULE_ICONS.users },
   { key: 'orders', path: '/orders', icon: MODULE_ICONS.orders },
   { key: 'reports', path: '/reports', icon: MODULE_ICONS.reports },
 ];
