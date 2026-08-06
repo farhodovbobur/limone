@@ -57,7 +57,7 @@ export function UserDrawer({
       if (isEdit && user) {
         return usersApi.update(user.id, {
           firstName: v.firstName,
-          lastName: v.lastName,
+          lastName: v.lastName || null,
           role: v.role,
           phone: v.phone || null,
           email: v.email || null,
@@ -68,7 +68,7 @@ export function UserDrawer({
         username: v.username,
         password: v.password,
         firstName: v.firstName,
-        lastName: v.lastName,
+        lastName: v.lastName || null,
         role: v.role,
         phone: v.phone || undefined,
         email: v.email || undefined,
@@ -146,7 +146,6 @@ export function UserDrawer({
             control={control}
             name="lastName"
             label={t('drawer.lastName')}
-            required
           />
         </div>
 

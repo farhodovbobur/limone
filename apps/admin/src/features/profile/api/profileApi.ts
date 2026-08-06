@@ -21,7 +21,7 @@ export interface SessionInfo {
 
 export interface UpdateProfileInput {
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   phone: string | null;
   email: string | null;
 }

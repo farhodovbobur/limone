@@ -37,7 +37,7 @@ export function PersonalInfoCard({ user }: { user: ProfileUser }) {
     mutationFn: (v: UpdateProfileFormValues) =>
       profileApi.update({
         firstName: v.firstName,
-        lastName: v.lastName,
+        lastName: v.lastName || null,
         phone: v.phone || null,
         email: v.email || null,
       }),
@@ -135,7 +135,7 @@ export function PersonalInfoCard({ user }: { user: ProfileUser }) {
             {(
               [
                 { name: 'firstName', label: t('drawer.firstName'), req: true },
-                { name: 'lastName', label: t('drawer.lastName'), req: true },
+                { name: 'lastName', label: t('drawer.lastName'), req: false },
                 { name: 'phone', label: t('drawer.phone'), req: false },
                 { name: 'email', label: t('drawer.email'), req: false },
               ] as const

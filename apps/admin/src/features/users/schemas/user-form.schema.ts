@@ -4,7 +4,7 @@ import { PHONE_PATTERN } from '../../../shared/phone';
 
 const baseUserSchema = z.object({
   firstName: z.string().trim().min(1, 'drawer.vRequired').max(100),
-  lastName: z.string().trim().min(1, 'drawer.vRequired').max(100),
+  lastName: z.string().trim().max(100),
   username: z.string().trim().min(3, 'drawer.vUserShort').max(50),
   role: z.string().min(1, 'drawer.vRequired'),
   phone: z
