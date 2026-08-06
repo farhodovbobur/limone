@@ -9,16 +9,16 @@ const met = (pw: string) =>
 describe('passwordRules', () => {
   it('always returns all three rules so the list never changes shape', () => {
     expect(passwordRules('').map((r) => r.key)).toEqual([
-      'req8',
+      'req6',
       'reqMix',
       'reqSpecial',
     ]);
     expect(passwordRules('').every((r) => !r.met)).toBe(true);
   });
 
-  it('marks the length rule at exactly eight characters', () => {
-    expect(met('1234567')).not.toContain('req8');
-    expect(met('12345678')).toContain('req8');
+  it('marks the length rule at exactly the minimum', () => {
+    expect(met('1'.repeat(PASSWORD_MIN - 1))).not.toContain('req6');
+    expect(met('1'.repeat(PASSWORD_MIN))).toContain('req6');
   });
 
   it('needs both a letter and a digit for the mix rule', () => {
@@ -39,11 +39,11 @@ describe('passwordStrength', () => {
     expect(passwordStrength('')).toBe(0);
   });
 
-  it('rates a bare eight characters weak — and weak is still saveable', () => {
-    // This is the contract the user asked for: the meter may say "weak" while
-    // the schema (min-8, matching the API) still lets the form submit.
+  it('rates letters-only at the minimum weak — and weak is still saveable', () => {
+    // The contract: the meter may say "weak" while the schema (PASSWORD_MIN,
+    // matching the API) still lets the form submit.
     expect(passwordStrength('abcdefgh')).toBe(1);
-    expect(met('abcdefgh')).toContain('req8');
+    expect(met('abcdefgh')).toContain('req6');
   });
 
   it('climbs as rules are satisfied', () => {
@@ -59,18 +59,11 @@ describe('passwordStrength', () => {
     );
   });
 
-  it('still calls a password at the accepted minimum weak', () => {
-    // The gap is on purpose: PASSWORD_MIN (6) is what the form accepts, the
-    // checklist asks for 8. A saveable password may honestly read "weak".
-    const atMinimum = 'a1!'.padEnd(PASSWORD_MIN, 'x');
-    expect(atMinimum).toHaveLength(PASSWORD_MIN);
-    expect(passwordStrength(atMinimum)).toBe(1);
-  });
-
-  it('keeps anything below the recommended length at the weakest reading', () => {
+  it('keeps anything below the length rule at the weakest reading', () => {
     // The bug this locks out: mix and special used to score independently of
     // length, so three characters could read 2 of 4.
-    for (const short of ['a', 'a1', 'a1!', 'Ab1!', 'Ab1!cd']) {
+    for (const short of ['a', 'a1', 'a1!', 'Ab1!']) {
+      expect(short.length).toBeLessThan(PASSWORD_MIN);
       expect(passwordStrength(short)).toBe(1);
     }
   });
