@@ -22,7 +22,10 @@
     "back": "Back",
     "deniedTitle": "Access denied",
     "deniedBody": "This section isn't available for your role. If you think this is a mistake, contact an administrator.",
-    "deniedCta": "Back to dashboard"
+    "deniedCta": "Back to dashboard",
+    "collapseNav": "Collapse menu",
+    "expandNav": "Expand menu",
+    "closeNav": "Close menu"
   },
   "login": {
     "welcome": "Sign in to your account",

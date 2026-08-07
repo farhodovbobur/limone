@@ -22,7 +22,10 @@
     "back": "Orqaga",
     "deniedTitle": "Ruxsat yo'q",
     "deniedBody": "Bu bo'lim sizning rolingiz uchun ochiq emas. Xato deb o'ylasangiz, administratorga murojaat qiling.",
-    "deniedCta": "Boshqaruv paneliga qaytish"
+    "deniedCta": "Boshqaruv paneliga qaytish",
+    "collapseNav": "Menyuni yig'ish",
+    "expandNav": "Menyuni ochish",
+    "closeNav": "Menyuni yopish"
   },
   "login": {
     "welcome": "Hisobingizga kiring",
