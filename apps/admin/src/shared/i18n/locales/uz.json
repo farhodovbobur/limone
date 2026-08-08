@@ -48,10 +48,10 @@
   },
   "users": {
     "title": "Foydalanuvchilar",
-    "lead": "Tizim foydalanuvchilarini boshqaring — rollar, kirish huquqi va holat. Faqat administratorlar uchun.",
     "search": "Ism yoki login bo'yicha qidirish",
     "allRoles": "Barcha rollar",
-    "add": "Foydalanuvchi qo'shish",
+    "add": "Qo'shish",
+    "addAria": "Foydalanuvchi qo'shish",
     "th": {
       "name": "Ism",
       "username": "Login",

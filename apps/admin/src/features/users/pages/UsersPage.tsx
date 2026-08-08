@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Input, Select, Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import { App, Button, Input, Select } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs } from '../../../layouts/Breadcrumbs';
@@ -8,6 +7,10 @@ import { useAuthStore } from '../../auth/store/authStore';
 import { Avatar } from '../../../shared/components/Avatar';
 import { Icons } from '../../../shared/icons';
 import { Hangtag } from '../../../shared/components/Hangtag';
+import {
+  ResponsiveTable,
+  type ResponsiveColumn,
+} from '../../../shared/components/ResponsiveTable';
 import { ASSIGNABLE_ROLES, usersApi, type User } from '../api/usersApi';
 import { UserDrawer } from '../components/UserDrawer';
 
@@ -49,10 +52,11 @@ export function UsersPage() {
     });
   }, [users.data, query, roleFilter]);
 
-  const columns: ColumnsType<User> = [
+  const columns: ResponsiveColumn<User>[] = [
     {
       title: t('users.th.name'),
       key: 'name',
+      card: 'title',
       sorter: (a, b) =>
         `${a.firstName} ${a.lastName ?? ''}`.localeCompare(
           `${b.firstName} ${b.lastName ?? ''}`,
@@ -79,11 +83,13 @@ export function UsersPage() {
     {
       title: t('users.th.role'),
       dataIndex: 'role',
+      card: 'badge',
       render: (role: string) => <Hangtag>{t(`roles.${role}`)}</Hangtag>,
     },
     {
       title: t('users.th.phone'),
       dataIndex: 'phone',
+      card: 'meta',
       render: (v: string | null) => (
         <span className="text-ink-secondary tabular-nums">{v ?? '—'}</span>
       ),
@@ -91,6 +97,7 @@ export function UsersPage() {
     {
       title: t('users.th.status'),
       dataIndex: 'isActive',
+      card: 'badge',
       render: (active: boolean) =>
         active ? (
           <Hangtag variant="success">{t('users.active')}</Hangtag>
@@ -101,13 +108,14 @@ export function UsersPage() {
     {
       title: <span className="block text-right">{t('users.th.actions')}</span>,
       key: 'actions',
+      card: 'actions',
       render: (_, u) => (
         <div className="flex items-center justify-end gap-1">
           <button
             type="button"
             title={t('users.edit')}
             onClick={() => setDrawer({ mode: 'edit', user: u })}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-secondary u-focus transition-colors hover:bg-olive-100 hover:text-olive-800 active:bg-olive-200"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-secondary u-focus transition-colors pointer-coarse:h-11 pointer-coarse:w-11 hover:bg-olive-100 hover:text-olive-800 active:bg-olive-200"
           >
             <Icons.edit size={17} />
           </button>
@@ -122,7 +130,7 @@ export function UsersPage() {
                   : t('users.activate')
             }
             onClick={() => toggleActive.mutate(u)}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg u-focus transition-colors enabled:hover:bg-olive-100 enabled:active:bg-olive-200 disabled:cursor-not-allowed disabled:opacity-35 ${
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg u-focus transition-colors pointer-coarse:h-11 pointer-coarse:w-11 enabled:hover:bg-olive-100 enabled:active:bg-olive-200 disabled:cursor-not-allowed disabled:opacity-35 ${
               u.isActive
                 ? 'text-ink-secondary enabled:hover:text-olive-800'
                 : 'text-success'
@@ -138,15 +146,11 @@ export function UsersPage() {
   return (
     <div>
       <Breadcrumbs className="mb-3" />
-      <div className="mb-5 flex items-end justify-between gap-5">
-        <div>
-          <h2 className="m-0 text-lg font-medium">{t('users.title')}</h2>
-          <p className="mt-1.5 mb-0 max-w-130 text-sm text-ink-secondary">
-            {t('users.lead')}
-          </p>
-        </div>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <h2 className="m-0 text-lg font-medium">{t('users.title')}</h2>
         <Button
           type="primary"
+          aria-label={t('users.addAria')}
           icon={<Icons.plus size={17} />}
           onClick={() => setDrawer({ mode: 'create' })}
         >
@@ -165,7 +169,7 @@ export function UsersPage() {
             allowClear
           />
           <Select
-            className="w-47.5"
+            className="w-full sm:w-47.5"
             value={roleFilter}
             onChange={setRoleFilter}
             options={[
@@ -197,7 +201,7 @@ export function UsersPage() {
             </Button>
           </div>
         ) : (
-          <Table<User>
+          <ResponsiveTable<User>
             rowKey="id"
             columns={columns}
             dataSource={filtered}

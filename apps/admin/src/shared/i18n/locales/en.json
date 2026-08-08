@@ -48,10 +48,10 @@
   },
   "users": {
     "title": "Users",
-    "lead": "Manage system users — roles, access and status. Admin-only screen.",
     "search": "Search by name or username",
     "allRoles": "All roles",
-    "add": "Add user",
+    "add": "Add",
+    "addAria": "Add user",
     "th": {
       "name": "Name",
       "username": "Username",
