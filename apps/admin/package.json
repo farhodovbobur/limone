@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint src vite.config.mts --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "shots": "node scripts/shots.mjs",
+    "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",
@@ -43,6 +45,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.7.0",
+    "playwright-core": "^1.62.1",
     "prettier": "^3.9.4",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
