@@ -27,21 +27,19 @@
   --color-line: #e6e6dd;
   --color-line-strong: #cfcfc2;
 
-  --color-success: #3b6d11;
-  --color-success-fill: #eaf3de;
-  --color-warning: #854f0b;
-  --color-warning-fill: #faeeda;
-  --color-danger: #a32d2d;
-  --color-danger-fill: #fcebeb;
-  --color-info: #185fa5;
-  --color-info-fill: #e6f1fb;
+  /* Tailwind default -600 stops, -100 fills (mirrors tokens.ts) */
+  --color-success: #16a34a;
+  --color-success-fill: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-fill: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-fill: #fee2e2;
+  --color-info: #2563eb;
+  --color-info-fill: #dbeafe;
 
   --font-sans:
     'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-
-  --radius-md: 8px;
-  --radius-lg: 12px;
 
   --shadow-sm: 0 1px 2px rgba(44, 46, 34, 0.06);
   --shadow-md: 0 2px 8px rgba(44, 46, 34, 0.08);
@@ -49,6 +47,7 @@
   /* Directional shadows for the fixed shell chrome over the content area. */
   --shadow-sidebar: 4px 0 16px rgba(44, 46, 34, 0.05);
   --shadow-topbar: 0 4px 16px rgba(44, 46, 34, 0.05);
+  --shadow-drawer: 8px 0 32px rgba(44, 46, 34, 0.2);
 }
 
 body {
@@ -71,6 +70,19 @@ body {
   animation: rise-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.shell-motion {
+  transition-property: translate;
+  transition-duration: 220ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (min-width: 1024px) {
+  .shell-motion {
+    transition-property: translate, left, padding-left;
+    transition-duration: 280ms;
+  }
+}
+
 .ant-table-thead > tr > th {
   font-size: 12px;
   letter-spacing: 0.05em;
@@ -87,6 +99,8 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-property:
+      opacity, color, background-color, border-color, outline-color, box-shadow,
+      fill, stroke !important;
   }
 }

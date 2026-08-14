@@ -23,14 +23,14 @@ export const palette = {
   border: '#E6E6DD',
   borderStrong: '#CFCFC2',
 
-  success: '#3B6D11',
-  successBg: '#EAF3DE',
-  warning: '#854F0B',
-  warningBg: '#FAEEDA',
-  danger: '#A32D2D',
-  dangerBg: '#FCEBEB',
-  info: '#185FA5',
-  infoBg: '#E6F1FB',
+  success: '#16A34A', // green-600
+  successBg: '#DCFCE7', // green-100
+  warning: '#D97706', // amber-600
+  warningBg: '#FEF3C7', // amber-100
+  danger: '#DC2626', // red-600
+  dangerBg: '#FEE2E2', // red-100
+  info: '#2563EB', // blue-600
+  infoBg: '#DBEAFE', // blue-100
 } as const;
 
 export const fonts = {
