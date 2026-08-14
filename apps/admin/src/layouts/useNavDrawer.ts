@@ -31,7 +31,14 @@ export function useNavDrawer() {
   useEffect(() => {
     if (!drawerOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key !== 'Escape') return;
+      const openOverlay = [...document.querySelectorAll('.ant-dropdown')].some(
+        (el) =>
+          !el.classList.contains('ant-dropdown-hidden') &&
+          !el.className.includes('-leave'),
+      );
+      if (openOverlay) return;
+      close();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

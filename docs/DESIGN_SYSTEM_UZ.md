@@ -317,7 +317,6 @@ Zaytun/krem palitra **bir marta** belgilanadi va ikkala tizim ham undan foydalan
   --color-ink:       #2C2E22;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
-  --radius-md: 8px;
 }
 ```
 
@@ -381,7 +380,7 @@ Bunga faqat **ikkala to'plam qidirilgandan keyin** murojaat qilinadi. Va chizish
 | Uch radiusi | 8 (`a8,8,0,0,1,0,16`) | Phosphor'ning yumaloq-uch idiomasi |
 | Xavfsiz chekka | har tomondan 40 birlik | `List`, `TextAlignLeft` va qardoshlari shu yerdan boshlanadi |
 
-Koordinatalarni o'ydan olmang — eng yaqin qardosh ikonkadan **qarzga oling**. `Icons.sidebar` `List`ning y markazlarini (64 / 128 / 192) va x oralig'ini (40 → 216) qayta ishlatadi, faqat oxirgi barning tugash nuqtasini o'zgartiradi (152). Aynan shu narsa uni 30 ta import qilingan glif yonida to'g'ri turishiga sabab.
+Koordinatalarni o'ydan olmang — eng yaqin qardosh ikonkadan **qarzga oling**. `Icons.sidebar` `List`ning y markazlarini (64 / 128 / 192) va x boshlanishini (40) qayta ishlatadi; ikkita uzun bar 256 gacha, qisqasi 192 da tugaydi. Aynan shu narsa uni 30 ta import qilingan glif yonida to'g'ri turishiga sabab.
 
 `custom()` ataylab bitta vaznli: bitta path bilan aniqlangan belgining `fill` variantı bo'lmaydi, shuning uchun `weight` qabul qilinadi va e'tiborsiz qoldiriladi. Qo'lda chizilgan belgini **hech qachon** faol nav elementiga bermang — u `weight="fill"` ga tayanadi.
 - **Vaznlar:** standart `regular`; faol nav elementi `fill`. `hero()` adapteri `weight="fill"`ni solid variantga o'giradi, shuning uchun faol-holat naqshi kutubxona almashsa ham saqlanadi. Teng elementlar qatorida vaznlarni aralashtirma.

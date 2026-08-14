@@ -317,7 +317,6 @@ The olive/cream palette is defined **once** and consumed by both systems, so the
   --color-ink:       #2C2E22;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
-  --radius-md: 8px;
 }
 ```
 
@@ -381,7 +380,7 @@ Reach for it only after both sets have been searched. When you do, the drawing i
 | Cap radius | 8 (`a8,8,0,0,1,0,16`) | Phosphor's rounded-cap idiom |
 | Safe margin | 40 units from each edge | where `List`, `TextAlignLeft` and siblings start |
 
-Borrow the actual coordinates of the nearest sibling icon rather than inventing them — `Icons.sidebar` reuses `List`'s y centres (64 / 128 / 192) and x span (40 → 216), changing only the last bar's end (152). That is the whole reason it sits correctly beside 30 imported glyphs.
+Borrow the actual coordinates of the nearest sibling icon rather than inventing them — `Icons.sidebar` reuses `List`'s y centres (64 / 128 / 192) and starts at its x=40, running the two long bars to 256 and stopping the short one at 192. That is the whole reason it sits correctly beside 30 imported glyphs.
 
 `custom()` is single-weight on purpose: a mark defined by one path has no `fill` variant, so `weight` is accepted and ignored. Never give a hand-drawn mark to an active nav item, which relies on `weight="fill"`.
 - **Weights:** `regular` by default; `fill` for the active nav item. The `hero()` adapter maps `weight="fill"` to the solid variant, so the active pattern survives a library swap. Don't mix weights within one row of equal items.

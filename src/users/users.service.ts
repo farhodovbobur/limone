@@ -73,10 +73,13 @@ export class UsersService {
     return this.toSafeUser(user);
   }
 
-  async update(id: number, dto: UpdateUserDto) {
+  async update(id: number, dto: UpdateUserDto, actorId?: number) {
     const exists = await this.userRepo.existsBy({ id });
     if (!exists) {
       throw new NotFoundException('User not found');
+    }
+    if (dto.isActive === false && actorId !== undefined && id === actorId) {
+      throw new BadRequestException('Cannot deactivate your own account');
     }
     if (dto.email != null) {
       await this.assertFree({ email: dto.email }, 'Email already in use', id);

@@ -157,6 +157,24 @@ async function dropdownMotion(page) {
     escaped.dropdown === 'leaving',
     `dropdown=${escaped.dropdown} (kutilgan: leaving)`,
   );
+
+  // One press dismisses one layer. Both open, first Escape must take only the
+  // menu — the drawer's own handler listens on `window` and used to fire too.
+  await settle(page);
+  await openDrawer(page);
+  await page.locator('[data-menu-trigger]').click();
+  await settle(page);
+  await page.keyboard.press('Escape');
+  await settle(page);
+  const first = await shell(page);
+  check(
+    '1-Escape faqat dropdown yopadi',
+    first.drawerOpen === true && first.dropdown !== 'open',
+    `drawer=${first.drawerOpen} dropdown=${first.dropdown}`,
+  );
+  await page.keyboard.press('Escape');
+  await settle(page);
+  check('2-Escape drawer yopadi', (await shell(page)).drawerOpen === false);
 }
 
 const CHROME_TARGETS = [
