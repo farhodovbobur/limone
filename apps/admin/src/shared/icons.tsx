@@ -81,6 +81,28 @@ export const hero = (Outline: HeroIcon, Solid?: HeroIcon): AppIcon =>
     );
   };
 
+export const custom = (d: string): AppIcon =>
+  function CustomIcon({ size = 20, className, 'aria-hidden': ariaHidden }) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 256 256"
+        fill="currentColor"
+        className={className}
+        aria-hidden={ariaHidden}
+      >
+        <path d={d} />
+      </svg>
+    );
+  };
+
+const NAV_MARK = [
+  'M40,56H256a8,8,0,0,1,0,16H40a8,8,0,0,1,0-16Z',
+  'M40,120H256a8,8,0,0,1,0,16H40a8,8,0,0,1,0-16Z',
+  'M40,184H192a8,8,0,0,1,0,16H40a8,8,0,0,1,0-16Z',
+].join('');
+
 export const Icons = {
   // Modules
   dashboard: ph(SquaresFourIcon),
@@ -96,6 +118,7 @@ export const Icons = {
   bell: ph(BellIcon),
   caretRight: ph(CaretRightIcon),
   caretUpDown: ph(CaretUpDownIcon),
+  sidebar: custom(NAV_MARK),
   logout: ph(SignOutIcon),
   user: ph(UserIcon),
   globe: ph(GlobeIcon),

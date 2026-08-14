@@ -1,7 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import { Dropdown } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { useDrawerNavigate } from './useNavDrawer';
 import { authApi } from '../features/auth/api/authApi';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { Avatar } from '../shared/components/Avatar';
@@ -9,6 +11,9 @@ import { Icons } from '../shared/icons';
 
 export function UserMenu() {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [instant, setInstant] = useState(false);
+  const go = useDrawerNavigate();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -23,6 +28,17 @@ export function UserMenu() {
       void navigate('/login', { replace: true });
     },
   });
+
+  const act = (run: () => void) => () => {
+    setInstant(true);
+    setOpen(false);
+    run();
+  };
+
+  const openChange = (next: boolean) => {
+    if (next) setInstant(false);
+    setOpen(next);
+  };
 
   const popup = () => (
     <div className="w-54 rounded-xl border border-line bg-surface p-1.5 shadow-lg">
@@ -41,28 +57,39 @@ export function UserMenu() {
       </div>
       <div className="mx-1 my-1 h-px bg-line" />
       <MenuItem
+        testId="profile"
         icon={<Icons.user size={17} />}
         label={t('shell.profile')}
-        onClick={() => void navigate('/profile')}
+        onClick={act(() => go('/profile'))}
       />
       <MenuItem
+        testId="password"
         icon={<Icons.key size={17} />}
         label={t('cp.title')}
-        onClick={() => void navigate('/profile?tab=password')}
+        onClick={act(() => go('/profile?tab=password'))}
       />
       <div className="mx-1 my-1 h-px bg-line" />
       <MenuItem
+        testId="logout"
         icon={<Icons.logout size={17} />}
         label={t('shell.logout')}
         danger
-        onClick={() => logout.mutate()}
+        onClick={act(() => logout.mutate())}
       />
     </div>
   );
 
   return (
-    <Dropdown trigger={['click']} placement="topLeft" popupRender={popup}>
+    <Dropdown
+      trigger={['click']}
+      placement="topLeft"
+      popupRender={popup}
+      open={open}
+      onOpenChange={openChange}
+      transitionName={instant ? '' : undefined}
+    >
       <button
+        data-menu-trigger
         type="button"
         className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left u-focus transition-colors hover:bg-olive-100 active:bg-olive-200"
       >
@@ -86,14 +113,17 @@ function MenuItem({
   label,
   danger = false,
   onClick,
+  testId,
 }: {
   icon: React.ReactNode;
   label: string;
   danger?: boolean;
   onClick?: () => void;
+  testId?: string;
 }) {
   return (
     <button
+      data-menu={testId}
       type="button"
       onClick={onClick}
       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] u-focus transition-colors ${
