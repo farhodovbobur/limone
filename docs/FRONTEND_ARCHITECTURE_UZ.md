@@ -2,7 +2,7 @@
 
 > **Holat:** Dizayn yakunlangan, qurilish boshlandi
 > **Chetlanish (2026-07-25):** Nx **kechiktirildi** (egasining qarori — avval mustaqil loyihalarda poydevorni o'rganish; `BUSINESS_PLAN.md` §12 #6). `apps/admin` hozircha o'z `package.json`iga ega mustaqil Vite loyihasi; API repo root'ida qoladi. Zod sxemalar `libs/shared` paydo bo'lguncha FE tomonda vaqtincha nusxalanadi.
-> **Oxirgi yangilanish:** 2026-07-25
+> **Oxirgi yangilanish:** 2026-08-06
 > **Qamrov:** Ichki admin dashboard (Faza 0 dan boshlab), Nx workspace'da `apps/admin` sifatida yashaydi. Mijoz storefront — alohida ilova (Faza 6, `apps/storefront`).
 > **Bog'liq:** `./PHASE_0_FOUNDATION.md`, `../BUSINESS_PLAN.md` (§9 repo tuzilishi va API kontrakt)
 > **Eslatma:** Bu tarjima; asl (canonical) hujjat — `FRONTEND_ARCHITECTURE.md`.
@@ -42,49 +42,65 @@ Papkalar backend modullariga mos. Har bir feature mustaqil (`api`, `hooks`, `com
 ```
 apps/admin/
   index.html
-  project.json                 # Nx loyiha konfiguratsiyasi
-  vite.config.ts               # React + @tailwindcss/vite plaginlari
+  package.json                 # mustaqil loyiha (Nx kechiktirilgan — sarlavhaga qarang)
+  vite.config.mts
   .env                         # VITE_API_BASE_URL
+  public/                      # design-system.html, icon-preview.html (ma'lumot doskalari)
   src/
     main.tsx
-    App.tsx
-    index.css                  # @import "tailwindcss" + @theme palitra (tokens.ts ni aks ettiradi)
+    index.css                  # Tailwind v4 @theme — ranglar, soyalar, shriftlar
+    assets/logos/              # brend belgilari (SVG + PNG)
     app/
-      tokens.ts                # palitra (TS) — yagona manba
-      theme.ts                 # AntD ConfigProvider tokenlari (tokens.ts dan import)
-      providers.tsx            # ConfigProvider + StyleProvider(layer), QueryClient, i18n, Router
-      router.tsx               # route ta'riflari
-      queryClient.ts
+      providers.tsx            # QueryClient, AntD ConfigProvider, i18n, Router
+      router.tsx               # marshrutlar + rol guard'lari
+      queryClient.ts           # staleTime va boshqa query standartlari
+      theme.ts, tokens.ts      # AntD mavzusi index.css bilan bir manbadan
     config/
       env.ts                   # import.meta.env ni o'qiydi (tiplangan)
-      constants.ts
     shared/
-      api/
-        axios.ts               # axios instance + interceptorlar
-        types.ts               # umumiy API tiplari (ApiError, Paginated<T>...)
-      components/              # qayta ishlatiladigan: PageHeader, DataTable, ConfirmDialog
-      hooks/
-      lib/                     # jwt decode, formatterlar, helperlar
-      i18n/
-        index.ts
-        locales/{uz,ru,en}.json
+      api/axios.ts             # axios instansiyasi + interceptorlar
+      session/                 # kirgan sessiya qancha yashashi (§5)
+        activity.ts            # odam harakatini kuzatish, idle hisobi, tab qulfi
+        token.ts               # access tokenning e'lon qilingan umrini o'qiydi
+        endSession.ts          # sessiyani serverda, storage'da va tabda yopadi
+      components/              # Avatar, Hangtag, Req, PasswordStrength, ErrorBoundary…
+      access.ts                # rol x modul matritsasi (guard va nav uchun yagona manba)
+      icons.tsx                # ikonka registri — ikonka kutubxonasini import qiladigan yagona fayl
+      password.ts, phone.ts, safePath.ts
+      i18n/index.ts, i18n/locales/{uz,ru,en}.json
     layouts/
-      DashboardLayout.tsx      # sidebar + topbar + content
-      AuthLayout.tsx           # login ekrani layout
+      DashboardLayout.tsx      # sidebar + topbar + kontent, sessiya hook'ini mount qiladi
+      AuthLayout.tsx           # login ekrani tartibi
+      Sidebar.tsx, Topbar.tsx, UserMenu.tsx, Breadcrumbs.tsx
+      nav.ts                   # nav elementlari, access.ts dan kelib chiqadi
+    pages/
+      DashboardHomePage.tsx
     features/
       auth/
         api/authApi.ts         # login, refresh, logout, me, change-password
-        store/authStore.ts     # zustand: accessToken + refreshToken + user
-        hooks/useAuth.ts
-        components/RequireAuth.tsx   # route guard (kirgan)
-        components/RequireRole.tsx   # route guard (rol ruxsat)
+        store/authStore.ts     # zustand: tokenlar + user + idle oynasi
+        hooks/useSessionKeepAlive.ts   # faol ekan yangilash, ogohlantirish, chiqarish
+        components/RequireAuth.tsx     # marshrut guard'i (kirganmi)
+        components/RequireRole.tsx     # marshrut guard'i (rol ruxsat berilganmi)
+        components/IdleWarning.tsx     # sanoq paneli
         pages/LoginPage.tsx
-      users/                   # Faza 0: xodim boshqaruvi (faqat admin)
+        schemas/login.schema.ts
+      profile/                 # o'z hisobi: ma'lumot, parol, sessiyalar
+        api/profileApi.ts
+        components/{PersonalInfoCard,PasswordCard,SessionsCard}.tsx
+        pages/ProfilePage.tsx
+        schemas/{update-profile,change-password}.schema.ts
+        lib.ts                 # qurilma yorliqlari, sana formatlash
+      users/                   # Faza 0: foydalanuvchilarni boshqarish (faqat admin)
         api/usersApi.ts
-        hooks/useUsers.ts
-        components/{UserTable,UserForm}.tsx
-        pages/{UsersListPage,UserFormPage}.tsx
+        components/UserDrawer.tsx      # yaratish va tahrirlash bitta drawer'da
+        pages/UsersPage.tsx
+        schemas/user-form.schema.ts
       # keyingi fazalar: materials/, products/, production/, wages/, orders/...
+
+Testlar tekshirayotgan narsasi yonida turadi (`*.test.ts`) va faqat sof
+mantiqni qamraydi — access matritsasi, safePath, phone, password, sessiya
+harakati va tokeni.
 ```
 
 ---
@@ -101,23 +117,99 @@ apps/admin/
 
 ## 5. Autentifikatsiya va token boshqaruvi
 
-**Model — Variant B (sliding sessiya).** Ikki token: qisqa muddatli **access token** (~15m) har so'rovga ketadi, va **refresh token** muddati — **2h inaktivlik oynasi**. Faollik access tokenni yangilab turadi (2h oynasini qaytadan boshlaydi) → user cheksiz kirib turadi. 2 soat jim → refresh muvaffaqiyatsiz → logout. Muddatlar backendда (`ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL`); frontend ularni takrorlamaydi.
+> **2026-08-06 da qayta ko'rildi.** Sliding-sessiya modeli o'zgarmadi, lekin
+> quyida nomlangan uchta narsa birinchi qoralamadan keyin qurildi: "harakatsiz"
+> endi HTTP trafigidan emas, **odam harakatidan** o'lchanadi; access token har
+> so'rovda server holati bilan solishtiriladi; harakatsizlik oynasini frontend
+> takrorlamaydi, uni API jo'natadi. Amalga oshirish tafsilotlari va ularni
+> shakllantirgan xatolar: `FRONTEND.md`, `NESTJS.md` §13–§15.
 
-**Login oqimi.** `POST /api/auth/login { username, password }` → `{ accessToken, refreshToken, user }`. Hammasi `localStorage`'da saqlanadi va `authStore` (Zustand) to'ldiriladi.
+**Model — Variant B (sliding sessiya).** Ikki token: qisqa muddatli **access
+token** (~15m) har so'rovga ketadi, va **refresh token** muddati —
+**2 soatlik harakatsizlik oynasi**. Davom etayotgan faollik access tokenni
+yangilaydi va 2 soatlik oynani qaytadan boshlaydi → foydalanuvchi cheksiz kirib
+turadi. 2 soat harakatsizlik → sessiya tugaydi. Ikkala muddat ham backendda
+(`ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL`); frontend ularni hech qachon
+takrorlamaydi.
 
-**Saqlanish.** `localStorage` tab va brauzer yopilsa ham qoladi — faol sessiya reload'dan keyin davom etadi, va 2h jimlik qoidasi logout'ni boshqaradi.
+**Login oqimi.** `POST /api/auth/login { username, password }` →
+`{ accessToken, refreshToken, sessionIdleMs, user }`. `localStorage`'da
+saqlanadi va `authStore` (Zustand) to'ldiriladi.
+
+`sessionIdleMs` — API haqiqatan hurmat qiladigan harakatsizlik oynasi. U
+endigina berilgan refresh qatoridan hisoblanadi va **muddat sifatida
+yuboriladi, absolyut vaqt sifatida emas** — brauzer uni o'z soatiga qo'shadi,
+shu sababli ikki mashina soati hech qachon solishtirilmaydi. Demak
+`REFRESH_TOKEN_TTL` o'zgarsa API'ni qayta ishga tushirish yetarli, frontendni
+qayta qurish shart emas.
+
+**Saqlanish.** `localStorage` tab va brauzer yopilsa ham qoladi, shuning uchun
+faol sessiya reload'dan keyin davom etadi. `storage` tinglovchisi **boshqa
+tablarda** store'ni yangilaydi: usiz ikkinchi tab birinchisi allaqachon
+almashtirgan tokenni yuborishda davom etadi, almashtirilgan tokenni qayta
+yuborish esa o'g'irlik deb qabul qilinadi.
+
+**"Faol" degani odam, so'rov emas.** Mijoz `pointerdown`, `keydown`, `wheel` va
+`touchstart` hodisalarini tinglaydi va oxirgi harakat vaqtini `localStorage`'da
+saqlaydi (hamma tab uni baham ko'radi). `mousemove` **ataylab** hisobga
+olinmaydi: turtilgan stol ishlayotgan odam emas, va uni sanash tashlab
+ketilgan noutbukni tizimda ushlab turardi — qoida aynan shundan himoya qiladi.
+
+Bu farq hal qiluvchi. Ilovadagi har qanday davriy so'rov (sessiyalar ro'yxati
+har 30 soniyada yangilanadi) aks holda o'z `401`iga o'zi refresh bilan javob
+berib, tashlab ketilgan tabni abadiy tirik saqlardi.
+
+**Odam faol ekan** access token muddati tugashidan **oldin** yangilanadi —
+shunda uzoq forma "Saqlash"dagi `401` tufayli yo'qolmaydi. Yangilash tablar
+orasidagi qulf bilan cheklangan, chunki tablar bitta tokenni baham ko'radi va
+chegaraga bir vaqtda yetadi.
+
+**Chegaraga yaqinlashganda** (2 soatdan 2 daqiqa kam) sanoq paydo bo'ladi —
+modal emas, **pastdagi panel**: har qanday haqiqiy harakat harakatsizlik
+hisobini nolga qaytaradi, ya'ni stol yonidagi odam unga shunchaki ishda davom
+etib javob beradi. Chegarada mijoz sessiyani o'zi tugatadi, serverdagi qatorni
+bekor qiladi (shunda u qurilmalar ro'yxatidan darhol yo'qoladi) va
+`/login?reason=idle` ga yo'naltiradi.
 
 **Axios interceptorlar.**
-- *Request:* `Authorization: Bearer <accessToken>` ni biriktiradi.
-- *Response:* `401`da (access tugagan) → `POST /api/auth/refresh { refreshToken }` chaqiradi; muvaffaqiyatда yangi tokenlarni saqlab **asl so'rovni qayta yuboradi**; muvaffaqiyatsizда (refresh tugagan/bekor → 2h jimlik, yoki deaktivatsiya) → auth tozalanadi + `/login`ga yo'naltiriladi.
+- *Request:* `Authorization: Bearer <accessToken>` biriktiriladi.
+- *Response:* `401`da avval harakatsizlik oynasi o'tib ketmaganini tekshiradi —
+  o'tgan bo'lsa yangilamasdan sessiyani tugatadi (aynan shu narsa fondagi
+  davriy so'rovning o'lgan sessiyani tiriltirishiga yo'l qo'ymaydi). Aks holda
+  `POST /api/auth/refresh { refreshToken }` chaqiradi, yangi tokenlarni saqlab
+  **asl so'rovni qayta yuboradi**; muvaffaqiyatsizlikda auth tozalanadi va
+  `/login` ga yo'naltiriladi.
 
-**Single-flight refresh.** Bir vaqtdagi bir nechta 401 bitta refresh chaqiruvini bo'lishadi va qayta urinishlarni navbatga qo'yadi — token N marta emas, bir marta yangilanadi.
+**Single-flight refresh.** Bir vaqtdagi bir nechta 401 bitta refresh
+chaqiruvini bo'lishadi va qayta urinishlarni navbatga qo'yadi — token N marta
+emas, bir marta yangilanadi. Yuqoridagi oldindan yangilash **xuddi shu**
+funksiyani chaqiradi, shuning uchun ikki yo'l poyga qila olmaydi.
 
-**Ilova ochilganda.** Tokenlar storage'dan o'qiladi; bo'lsa, sessiya optimistik to'ldiriladi — birinchi `401`/refresh tsikli haqiqiyligini tekshiradi. Token bo'lmasa → chiqilgan.
+**Ilova ochilganda.** Tokenlar storage'dan o'qiladi; bo'lsa, sessiya optimistik
+to'ldiriladi — birinchi so'rov haqiqiyligini tekshiradi. Token bo'lmasa →
+chiqilgan.
 
-**"Faol" = so'rov yuborish.** Navigatsiya/interaksiya API chaqiruvlarni keltirib chiqaradi, bular sessiyani tirik tutadi. (Ixtiyoriy yaxshilash: access tokenni muddatdan oldin proaktiv yangilovchi timer, va/yoki UI'da aniq 2h da chiqaradigan idle-timer.)
+**Server tomonidagi sessiya tekshiruvi.** Imzolangan access tokenning o'zi
+yetarli emas: API token ichidagi `sid` da'vosi ko'rsatgan sessiya qatori hali
+tirikligini ham tekshiradi. Usiz "Boshqa qurilmalardan chiqish" faqat
+*keyingi* yangilanishni to'sardi, bekor qilingan qurilma esa o'zining qolgan
+15 daqiqasini ishlab yurardi. Narxi — har so'rovda bitta primary-key qidiruvi.
 
-**Xavfsizlik eslatmasi.** localStorage degani XSS tokenlarni o'qishi mumkin. Ichki tool uchun maqbul; React'ning standart escape'i, dependency ehtiyotkorligi va CSP bilan kamayadi. Auth/token mantig'i markazlashtirilgan (bitta `authStore` + Axios interceptor) — keyin **refresh tokenni httpOnly cookie**ga izolyatsiyalangan holda ko'chirsa bo'ladi (ochiqroq Faza 6 storefront uchun tavsiya etiladi).
+**Rate limiting.** `POST /auth/login` va `POST /auth/change-password`
+**(hisob, IP)** juftligi bo'yicha cheklangan — faqat IP bo'yicha emas, chunki
+butun ustaxona bitta ofis manzilini baham ko'radi va IP bo'yicha cheklash bir
+kishining xato terishi bilan hammani qulflab qo'yardi. UI `429` ni umumiy xato
+o'rniga o'z xabariga bog'laydi.
+
+**Xavfsizlik eslatmasi.** localStorage degani XSS tokenlarni o'qishi mumkin.
+Ichki tool uchun maqbul; React'ning standart escape'i va dependency
+ehtiyotkorligi bilan kamayadi. **Content-Security-Policy hali qo'yilmagan** —
+bu shu yerdagi eng katta ochiq bo'shliq, va u hal qilinmagan deploy nishoniga
+bog'liq (`BUSINESS_PLAN.md` §12 #2), chunki admin bundle'i hozir bizning nginx
+orqali xizmat qilinmaydi. Auth/token mantig'i markazlashtirilgan (bitta
+`authStore` + Axios interceptor), shuning uchun **refresh tokenni httpOnly
+cookie**ga izolyatsiyalangan holda ko'chirish mumkin — ochiqroq Faza 6
+storefront uchun tavsiya etiladi.
 
 ---
 

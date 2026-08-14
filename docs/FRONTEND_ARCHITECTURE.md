@@ -2,7 +2,7 @@
 
 > **Status:** Design locked, build started
 > **Deviation (2026-07-25):** Nx is **deferred** (owner decision — learn the fundamentals on standalone projects first; `BUSINESS_PLAN.md` §12 #6). `apps/admin` currently runs as an independent Vite project with its own `package.json`; the API stays at the repo root. Zod schemas are temporarily duplicated on the FE until `libs/shared` exists.
-> **Last updated:** 2026-07-25
+> **Last updated:** 2026-08-06
 > **Scope:** Internal admin dashboard (Phase 0 onward), living at `apps/admin` in the Nx workspace. Customer storefront is a separate app (Phase 6, `apps/storefront`).
 > **Related:** `./PHASE_0_FOUNDATION.md`, `../BUSINESS_PLAN.md` (§9 repo structure & API contract)
 > **Note:** This English document is canonical; `FRONTEND_ARCHITECTURE_UZ.md` is a translation.
@@ -42,46 +42,64 @@ Folders mirror backend modules. Each feature is self-contained (`api`, `hooks`, 
 ```
 apps/admin/
   index.html
-  project.json                 # Nx project config
-  vite.config.ts
+  package.json                 # standalone project (Nx deferred — see header)
+  vite.config.mts
   .env                         # VITE_API_BASE_URL
+  public/                      # design-system.html, icon-preview.html (reference boards)
   src/
     main.tsx
-    App.tsx
+    index.css                  # Tailwind v4 @theme — colours, shadows, fonts
+    assets/logos/              # brand marks (SVG + PNG)
     app/
       providers.tsx            # QueryClient, AntD ConfigProvider, i18n, Router
-      router.tsx               # route definitions
-      queryClient.ts
+      router.tsx               # route definitions + role guards
+      queryClient.ts           # staleTime and other query defaults
+      theme.ts, tokens.ts      # AntD theme fed from the same tokens as index.css
     config/
       env.ts                   # reads import.meta.env (typed)
-      constants.ts
     shared/
-      api/
-        axios.ts               # axios instance + interceptors
-        types.ts               # shared API types (ApiError, Paginated<T>...)
-      components/              # reusable: PageHeader, DataTable wrapper, ConfirmDialog
-      hooks/
-      lib/                     # jwt decode, formatters, helpers
-      i18n/
-        index.ts
-        locales/{uz,ru,en}.json
+      api/axios.ts             # axios instance + request/response interceptors
+      session/                 # how long a signed-in session lives (§5)
+        activity.ts            # human-activity tracking, idle maths, tab lock
+        token.ts               # reads the access token's stated lifetime
+        endSession.ts          # closes the session on server, storage and tab
+      components/              # Avatar, Hangtag, Req, PasswordStrength, ErrorBoundary…
+      access.ts                # role x module matrix (single source for guards + nav)
+      icons.tsx                # icon registry — the only file importing an icon library
+      password.ts, phone.ts, safePath.ts
+      i18n/index.ts, i18n/locales/{uz,ru,en}.json
     layouts/
-      DashboardLayout.tsx      # sidebar + topbar + content
+      DashboardLayout.tsx      # sidebar + topbar + content, mounts the session hook
       AuthLayout.tsx           # login screen layout
+      Sidebar.tsx, Topbar.tsx, UserMenu.tsx, Breadcrumbs.tsx
+      nav.ts                   # nav items, derived from access.ts
+    pages/
+      DashboardHomePage.tsx
     features/
       auth/
         api/authApi.ts         # login, refresh, logout, me, change-password
-        store/authStore.ts     # zustand: accessToken + refreshToken + user
-        hooks/useAuth.ts
-        components/RequireAuth.tsx   # route guard (logged in)
-        components/RequireRole.tsx   # route guard (role allowed)
+        store/authStore.ts     # zustand: tokens + user + idle window
+        hooks/useSessionKeepAlive.ts   # renew while active, warn, then sign out
+        components/RequireAuth.tsx     # route guard (logged in)
+        components/RequireRole.tsx     # route guard (role allowed)
+        components/IdleWarning.tsx     # the countdown panel
         pages/LoginPage.tsx
-      users/                   # Phase 0: staff management (admin only)
+        schemas/login.schema.ts
+      profile/                 # own account: details, password, sessions
+        api/profileApi.ts
+        components/{PersonalInfoCard,PasswordCard,SessionsCard}.tsx
+        pages/ProfilePage.tsx
+        schemas/{update-profile,change-password}.schema.ts
+        lib.ts                 # device labels, date formatting
+      users/                   # Phase 0: user management (admin only)
         api/usersApi.ts
-        hooks/useUsers.ts
-        components/{UserTable,UserForm}.tsx
-        pages/{UsersListPage,UserFormPage}.tsx
+        components/UserDrawer.tsx      # create + edit in one drawer
+        pages/UsersPage.tsx
+        schemas/user-form.schema.ts
       # later phases: materials/, products/, production/, wages/, orders/...
+
+Tests sit next to what they test (`*.test.ts`) and cover pure logic only —
+access matrix, safePath, phone, password, session activity and token.
 ```
 
 ---
@@ -98,23 +116,92 @@ apps/admin/
 
 ## 5. Authentication & token handling
 
-**Model — Variant B (sliding session).** Two tokens: a short-lived **access token** (~15m) sent on every request, and a **refresh token** whose lifetime is the **2h inactivity window**. Active use keeps refreshing the access token (resetting the 2h window) → the user stays logged in indefinitely. Idle for 2h → refresh fails → logout. The lifetimes live on the backend (`ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL`); the frontend does not duplicate them.
+> **Revised 2026-08-06.** The sliding-session model is unchanged, but three
+> things named below were built since the first draft: idle is now measured
+> from *human activity* rather than HTTP traffic, the access token is checked
+> against server state on every request, and the idle window is served by the
+> API instead of being restated in the frontend. Implementation notes and the
+> failures that shaped them: `FRONTEND.md`, `NESTJS.md` §13–§15.
 
-**Login flow.** `POST /api/auth/login { username, password }` → `{ accessToken, refreshToken, user }`. Store all in `localStorage` and hydrate the `authStore` (Zustand).
+**Model — Variant B (sliding session).** Two tokens: a short-lived **access
+token** (~15m) sent on every request, and a **refresh token** whose lifetime is
+the **2h inactivity window**. Continued activity refreshes the access token and
+restarts the 2h window → the user stays logged in indefinitely. Idle for 2h →
+the session ends. Both lifetimes live on the backend (`ACCESS_TOKEN_TTL`,
+`REFRESH_TOKEN_TTL`); the frontend never restates them.
 
-**Persistence.** `localStorage` survives tab and browser close — so an active session continues after a reload, and the 2h idle rule still governs logout.
+**Login flow.** `POST /api/auth/login { username, password }` →
+`{ accessToken, refreshToken, sessionIdleMs, user }`. Store in `localStorage`
+and hydrate the `authStore` (Zustand).
+
+`sessionIdleMs` is the idle window the API will actually honour, computed from
+the refresh row just issued and sent as a **duration, never a timestamp** —
+adding it to the browser's own clock avoids comparing two machines' clocks.
+Changing `REFRESH_TOKEN_TTL` therefore needs an API restart and no frontend
+rebuild.
+
+**Persistence.** `localStorage` survives tab and browser close, so an active
+session continues after a reload. A `storage` listener rehydrates the store in
+**other tabs**: without it a second tab keeps serving a token the first tab has
+already rotated, and replaying a rotated token is treated as theft.
+
+**"Active" means a human, not a request.** The client listens for `pointerdown`,
+`keydown`, `wheel` and `touchstart`, and stores the last-activity timestamp in
+`localStorage` (shared by every tab). `mousemove` is excluded on purpose: a
+nudged desk is not someone working, and counting it would keep an abandoned
+laptop signed in — the exact thing the rule exists to prevent.
+
+This distinction is load-bearing. Any polling in the app (the sessions list
+refetches every 30s) would otherwise answer its own `401` with a refresh and
+keep an abandoned tab alive forever.
+
+**While a human is active** the access token is renewed *before* it expires, so
+a long form is never lost to a `401` on save. The renewal is gated by a
+cross-tab lock, because tabs share one token and therefore reach the margin at
+the same moment.
+
+**Approaching the limit** (2h minus 2 minutes) a countdown appears — a bottom
+panel, not a modal: any real interaction resets the idle clock, so someone at
+the desk answers it simply by carrying on working. At the limit the client ends
+the session itself, revoking the row server-side so it leaves the device list
+immediately, and redirects to `/login?reason=idle`.
 
 **Axios interceptors.**
 - *Request:* attach `Authorization: Bearer <accessToken>`.
-- *Response:* on `401` (access expired) → call `POST /api/auth/refresh { refreshToken }`; on success, store the new tokens and **retry the original request**; on failure (refresh expired/revoked → 2h idle reached, or deactivated) → clear auth + redirect to `/login`.
+- *Response:* on `401`, first check whether the idle window has already passed —
+  if so end the session instead of refreshing (this is what stops background
+  polling from resurrecting a dead session). Otherwise call
+  `POST /api/auth/refresh { refreshToken }`, store the new tokens and **retry
+  the original request**; on failure clear auth and redirect to `/login`.
 
-**Single-flight refresh.** Concurrent 401s share one in-flight refresh call and queue their retries, so the token is refreshed once, not N times.
+**Single-flight refresh.** Concurrent 401s share one in-flight refresh call and
+queue their retries, so the token is refreshed once, not N times. The proactive
+renewal above calls the same function, so the two paths cannot race.
 
-**On app startup.** Read tokens from storage; if present, hydrate the session optimistically — the first `401`/refresh cycle reconciles validity. If no tokens → logged out.
+**On app startup.** Read tokens from storage; if present, hydrate the session
+optimistically — the first request reconciles validity. If no tokens → logged
+out.
 
-**"Active" = making requests.** Navigating/interacting triggers API calls, which keep the session alive. (Optional enhancement: a proactive timer refreshes the access token shortly before expiry, and/or an idle-timer logs the user out in the UI exactly at 2h for snappier UX.)
+**Server-side session check.** A signed access token alone is not enough: the
+API also verifies that the session row named by the token's `sid` claim is
+still live. Without it "sign out other devices" only blocked the *next*
+refresh, and the revoked device kept working for the rest of its 15 minutes.
+The cost is one primary-key lookup per request.
 
-**Security note.** localStorage means an XSS could read the tokens. Acceptable for an internal tool; mitigated by React's default escaping, careful dependencies, and CSP. Auth/token logic is centralized (one `authStore` + the Axios interceptor) so we can later move the **refresh token to an httpOnly cookie** in isolation — recommended for the more-exposed storefront in Phase 6.
+**Rate limiting.** `POST /auth/login` and `POST /auth/change-password` are
+throttled per **(account, IP)** — not per IP alone, because the whole workshop
+shares one office address and an IP-only limit would let one person's typos
+lock out everyone. The UI maps `429` to its own message rather than the generic
+error.
+
+**Security note.** localStorage means an XSS could read the tokens. Acceptable
+for an internal tool, mitigated by React's default escaping and careful
+dependencies. **A Content-Security-Policy is not yet in place** — it is the
+largest remaining gap here, and it depends on the undecided deploy target
+(`BUSINESS_PLAN.md` §12 #2) because the admin bundle is not served by our nginx
+today. Auth/token logic is centralized (one `authStore` + the Axios
+interceptor), so the **refresh token can later move to an httpOnly cookie** in
+isolation — recommended for the more-exposed storefront in Phase 6.
 
 ---
 

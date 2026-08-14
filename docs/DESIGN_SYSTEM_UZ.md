@@ -1,7 +1,7 @@
 # Dizayn Tizimi — LIMONÉ Admin
 
-> **Holat:** Dizayn yakunlangan, hali qurilmagan
-> **Oxirgi yangilanish:** 2026-08-01 (§9 ikonografiya qat'iylashdi: Phosphor asosiy + Heroicons zaxira)
+> **Holat:** Dizayn yakunlangan; shell, login, foydalanuvchilar va profil qurilgan
+> **Oxirgi yangilanish:** 2026-08-08 (§5 qayta yozildi: radius override'lari olib tashlandi — Tailwind shkalasi manba, drawer radius istisnosi, yo'nalishli soyalar, breakpoint va kiritish; doira ikonka tugmalar sinaldi va rad etildi. §9: `custom()` qo'lda chizilgan belgilar qo'shildi)
 > **Qamrov:** Ichki admin dashboard. Mijoz do'koni (Faza 6) buni kengaytirishi mumkin.
 > **Eslatma:** Bu tarjima; asl (canonical) hujjat — `DESIGN_SYSTEM.md`.
 > **Yondashuv:** To'liq custom design token (preset emas). Faqat light mode.
@@ -135,19 +135,63 @@ Og'irliklar: faqat **400 oddiy, 500 medium** (600/700 yo'q — tinch UI uchun og
 
 ## 5. Bo'shliq, radius, balandlik (elevation)
 
-**Bo'shliq shkalasi (4px asos):** `4, 8, 12, 16, 24, 32, 48`. Komponent ichi gap px'da; vertikal ritm 8 ning karralарида.
+### 5.1 Bo'shliq
 
-**Radius:** `sm 4` (tag, ichki input) · `md 8` (tugma, input, karta) · `lg 12` (panel, modal) · `pill 999` (status chip).
+**Shkala (4px asos):** `4, 8, 12, 16, 24, 32, 48`. Komponent ichi gap px'da; vertikal ritm 8 ning karralarida.
 
-**Elevation (juda yumshoq — premium, og'ir emas):**
+### 5.2 Radius
 
-| Token | Soya |
-|-------|------|
-| `shadow-sm` | `0 1px 2px rgba(44,46,34,0.06)` |
-| `shadow-md` | `0 2px 8px rgba(44,46,34,0.08)` |
-| `shadow-lg` | `0 8px 24px rgba(44,46,34,0.10)` |
+**Tailwind'ning o'z shkalasi, ataylab override qilinmagan** (egasining qarori, 2026-08-08). `@theme` rang, shrift va soyani belgilaydi, radiusni esa yo'q:
 
-Ajratish uchun soyadan ko'ra chegara afzal; soya faqat overlay uchun (dropdown, modal, popover).
+| Tailwind klass | Qiymat | Ishlatilishi |
+|----------------|--------|--------------|
+| `rounded-sm` | 4 | — |
+| `rounded-md` | 6 | breadcrumb orqaga, avatar, til almashtirgich segmenti |
+| `rounded-lg` | 8 | **boshqaruvlar** — tugma, ikonka tugma, nav element, input |
+| `rounded-xl` | 12 | **konteynerlar** — karta, panel, dropdown, jadval qobig'i |
+| `rounded-2xl` | 16 | — |
+| `rounded-r-3xl` | 24 | **faqat nav drawer'ning o'ng qirrasi** (pastda) |
+| `rounded-full` | pill | status chip, til almashtirgich, avatar — tugmalar uchun **emas** |
+
+> **Nima uchun hech narsa override qilinmagan.** Avval bu yerda `--radius-md: 8px` va `--radius-lg: 12px` turgan edi. Bu `lg` ni 12px'ga ko'tarib, uni Tailwind'ning nativ `xl` qiymati bilan **bir xil** qilib qo'ygan edi — ya'ni ikki klass nomi aynan bir xil natija berardi va `rounded-xl` jimgina "`lg` bilan bir xil" degan ma'noni tashirdi. Ikkala override'ni olib tashlash oltita alohida pog'onani qaytardi, va yo'l-yo'lakay `rounded-lg` ni 8px'ga tushirdi — bu aynan Ant Design'ning o'z `borderRadius` qiymati. Endi qo'lda yozilgan tugmalar AntD tugmalari bilan **mos keladi**; override'lar bilan ular 12 va 8 edi, ya'ni mos kelmasdi.
+
+**Boshqaruv shakli.** Har bir boshqaruv — yumaloq to'rtburchak, faqat-ikonkalilar ham. Radius **o'lchamga** qarab tanlanadi, yozuv bor-yo'qligiga qarab emas. Har bir boshqaruv barcha breakpointda bitta shaklda: o'lcham o'zgarganda shaklini o'zgartirgan tugma ikkita alohida boshqaruv bo'lib o'qiladi.
+
+Natija — hech qanday istisnosiz o'qiladigan ierarxiya: **boshqaruvlar 8, ularni ushlab turgan konteyner 12, hammasi ustidagi drawer 24.** Har bir daraja o'zi ichida joylashgan darajadan yumaloqroq.
+
+> **2026-08-08 da rad etildi: doira ikonka tugmalar.** Faqat-ikonkali boshqaruvlarga (nav toggle, bildirishnoma, breadcrumb orqaga, jadval qatori amallari) `rounded-full` qurildi va jonli ilovada ko'rildi, keyin qaytarildi — egasining qarori. Boshqa hamma yuzasi yumshoq to'rtburchak bo'lgan krem/zaytun tizimda doiralar begona ko'rinadi, hamda haqiqiy pill bo'lgan til almashtirgich bilan raqobatga kirishadi. Qayta "aniq yaxshilanish" sifatida taklif qilinmasligi uchun yozib qo'yildi.
+
+**24px istisnosi (egasining qarori, 2026-08-08).** Nav drawer'ning o'ng qirrasi `rounded-r-3xl`, ya'ni 12px chegarasidan yuqori. U ilovada skrim ustida to'liq balandlikda suzadigan **yagona** element, va 248 × to'liq balandlikdagi panelda 12px ko'rinmay ketadi. Chap qirrasi kvadrat qoladi — u viewport chetiga tegib turadi, radius esa u yerda fonni ochib qo'yadi. `lg` dan yuqorida esa xuddi shu panel layoutning qismi bo'ladi va radiusni butunlay tashlaydi (`lg:rounded-none`).
+
+### 5.3 Elevation (juda yumshoq — premium, og'ir emas)
+
+| Token | Soya | Ishlatilishi |
+|-------|------|--------------|
+| `shadow-sm` | `0 1px 2px rgba(44,46,34,0.06)` | karta, jadval konteyneri |
+| `shadow-md` | `0 2px 8px rgba(44,46,34,0.08)` | ko'tarilgan inline elementlar |
+| `shadow-lg` | `0 8px 24px rgba(44,46,34,0.10)` | dropdown, modal, popover |
+| `shadow-sidebar` | `4px 0 16px rgba(44,46,34,0.05)` | rel, `lg` va yuqorida — yo'nalishli |
+| `shadow-topbar` | `0 4px 16px rgba(44,46,34,0.05)` | topbar — yo'nalishli |
+| `shadow-drawer` | `8px 0 32px rgba(44,46,34,0.20)` | nav drawer, `lg` dan past |
+
+Ajratish uchun soyadan ko'ra chegara afzal; soya faqat overlay uchun.
+
+`shadow-drawer` ning shaffofligi qolganlaridan **to'rt barobar** kuchli, va bu ataylab: drawer sahifani allaqachon 40% qoraytirgan skrim ustida turadi, 5% qirra soyasi esa unga qarshi ko'rinmaydi. Boshqa joyda bu og'irlik xato bo'lardi.
+
+### 5.4 Breakpoint va kiritish
+
+Ikkita breakpoint, va har biri **o'z kontenti sig'masdan qolgan joyda** — hech qachon qurilma o'lchamida emas.
+
+| Breakpoint | Nima o'zgaradi | Nega shu yerda |
+|------------|----------------|----------------|
+| `lg` 1024 | Shell: rel ↔ overlay drawer | 248px doimiy rel 768px'lik planshetda ombor va buyurtma jadvallariga ~520px qoldiradi |
+| `md` 768 | Jadval: ustunlar ↔ stacked ro'yxat (`ResponsiveTable`) | Bundan pastda 6 ustunli jadvalni aylantirish mumkin, o'qish mumkin emas |
+
+Kiritish qobiliyati — kenglikdan **alohida** savol, va alohida javob oladi:
+
+- `pointer-coarse:` interaktiv nishonlarni **44px** ga kattalashtiradi (PRODUCT.md: tikuvchilar telefonda). Viewport'dan qat'i nazar ishlaydi — sensorli noutbuk ham oladi.
+- `hover:` ni himoyalash kerak emas. Tailwind v4 uni allaqachon `@media (hover: hover)` ichiga kompilyatsiya qiladi, shuning uchun sensorli qurilmada hover holati yopishib qolmaydi.
+- `prefers-reduced-motion` o'tishlarni o'chirmaydi, balki `opacity` va rang bilan cheklaydi (`index.css`). Harakat kamroq, javob kamroq emas.
 
 ---
 
@@ -322,7 +366,24 @@ Bu AntD theming'ни token asosida, Tailwind'ни esa layout/utility qatlami sif
 
 - **Asosiy to'plam: Phosphor** (`@phosphor-icons/react`). Vazn tizimi (regular / fill / duotone) va tikuvchilik domenini to'liq qoplashi (needle, t-shirt, swatches, coat-hanger) uchun tanlandi. Qarorga asos bo'lgan taqqoslash sahifasi: `apps/admin/public/icon-preview.html`.
 - **Ruxsat etilgan zaxira: Heroicons** (`@heroicons/react`) — faqat alohida ikon istisnolari uchun, Phosphor'da mos glif topilmasa. Avval Phosphor muqobillarini sinab ko'r (9 000+ glif). Bir qator — bir til: teng darajali elementlar qatoridagi (nav ro'yxati, toolbar, menyu) barcha ikonlar bitta to'plamdan bo'lishi shart.
-- **Yagona registry qoidasi:** komponentlar icon kutubxonasini to'g'ridan-to'g'ri import qilmaydi. Har bir ikon `apps/admin/src/shared/icons.tsx` orqali o'tadi — semantik nomlar (`Icons.edit`, `Icons.logout`), ikkala kutubxonani bitta `IconProps` interfeysiga keltiruvchi `ph()` / `hero()` adapterlari va sidebar bilan modul placeholder'larini sinxron tutuvchi `MODULE_ICONS`. Istalgan glifni almashtirish (jumladan Heroicons'ga) — registry'da bir qatorlik o'zgarish; chaqiruv joylari o'zgarmaydi.
+- **Yagona registry qoidasi:** komponentlar icon kutubxonasini to'g'ridan-to'g'ri import qilmaydi. Har bir ikon `apps/admin/src/shared/icons.tsx` orqali o'tadi — semantik nomlar (`Icons.edit`, `Icons.logout`), har bir manbani bitta `IconProps` interfeysiga keltiruvchi `ph()` / `hero()` / `custom()` adapterlari va sidebar bilan modul placeholder'larini sinxron tutuvchi `MODULE_ICONS`. Istalgan glifni almashtirish (jumladan Heroicons'ga) — registry'da bir qatorlik o'zgarish; chaqiruv joylari o'zgarmaydi.
+
+#### Qo'lda chizilgan belgilar (`custom()`, 2026-08-08 da qo'shildi)
+
+Phosphor va Heroicons'dan keyingi uchinchi manba — **ikkala to'plamda ham yo'q** shakllar uchun. Hozir bitta iste'molchisi bor: `Icons.sidebar`, ya'ni nav toggle — uchta bar, oxirgisi qisqa. Phosphor'da uch-barli notekis variant yo'q (`List` — uchta teng bar, `TextAlignLeft` — to'rtta navbatlashgan), shuning uchun chizildi.
+
+Bunga faqat **ikkala to'plam qidirilgandan keyin** murojaat qilinadi. Va chizish **erkin** emas — belgi to'plamning a'zosi bo'lib o'qilishi uchun, keyin qo'shilgan boshqa vaznli begona bo'lib emas, Phosphor geometriyasiga mos kelishi shart:
+
+| Cheklov | Qiymat | Nima uchun |
+|---------|--------|------------|
+| `viewBox` | `0 0 256 256` | Phosphor'ning o'z kanvasi; boshqasi ko'rinadigan chiziq qalinligini o'zgartiradi |
+| Bar / chiziq qalinligi | 16 birlik | `regular` bilan bir xil |
+| Uch radiusi | 8 (`a8,8,0,0,1,0,16`) | Phosphor'ning yumaloq-uch idiomasi |
+| Xavfsiz chekka | har tomondan 40 birlik | `List`, `TextAlignLeft` va qardoshlari shu yerdan boshlanadi |
+
+Koordinatalarni o'ydan olmang — eng yaqin qardosh ikonkadan **qarzga oling**. `Icons.sidebar` `List`ning y markazlarini (64 / 128 / 192) va x oralig'ini (40 → 216) qayta ishlatadi, faqat oxirgi barning tugash nuqtasini o'zgartiradi (152). Aynan shu narsa uni 30 ta import qilingan glif yonida to'g'ri turishiga sabab.
+
+`custom()` ataylab bitta vaznli: bitta path bilan aniqlangan belgining `fill` variantı bo'lmaydi, shuning uchun `weight` qabul qilinadi va e'tiborsiz qoldiriladi. Qo'lda chizilgan belgini **hech qachon** faol nav elementiga bermang — u `weight="fill"` ga tayanadi.
 - **Vaznlar:** standart `regular`; faol nav elementi `fill`. `hero()` adapteri `weight="fill"`ni solid variantga o'giradi, shuning uchun faol-holat naqshi kutubxona almashsa ham saqlanadi. Teng elementlar qatorida vaznlarni aralashtirma.
 - **O'lchamlar** (`size` prop, px): nav elementlari 19, dropdown menyu bandlari 17, tugmalar 15–17, input prefikslari 15–16, bo'sh/xato holat rasmlari 26–30. Faqat-ikon tugmalar §10 dagi ≥ 36px bosish maydonini saqlaydi.
 - **Rang:** chrome'da standart `text-ink-tertiary`, hover'da `olive-700` (`group-hover` orqali), faol/olive yuzalarda oq. Ikonlar palitradan tashqari rang kiritmaydi.

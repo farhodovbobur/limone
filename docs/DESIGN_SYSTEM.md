@@ -1,7 +1,7 @@
 # Design System — LIMONÉ Admin
 
-> **Status:** Design locked, not yet built
-> **Last updated:** 2026-08-01 (§9 iconography locked: Phosphor primary + Heroicons fallback)
+> **Status:** Design locked; shell, login, users and profile built
+> **Last updated:** 2026-08-08 (§5 rewritten: radius overrides removed — Tailwind scale is the source, drawer radius exception, directional shadows, breakpoints & input; circular icon buttons tried and rejected. §9: `custom()` hand-drawn marks added)
 > **Note:** This English document is canonical; `DESIGN_SYSTEM_UZ.md` is a translation.
 > **Scope:** Internal admin dashboard. Customer storefront (Phase 6) may extend this.
 > **Approach:** Full custom design tokens (not a preset). Light mode only.
@@ -135,19 +135,63 @@ Weights: **400 regular, 500 medium** only (no 600/700 — too heavy for a calm U
 
 ## 5. Spacing, radius, elevation
 
-**Spacing scale (4px base):** `4, 8, 12, 16, 24, 32, 48`. Component-internal gaps in px; vertical section rhythm in multiples of 8.
+### 5.1 Spacing
 
-**Radius:** `sm 4` (tags, inner inputs) · `md 8` (buttons, inputs, cards) · `lg 12` (panels, modals) · `pill 999` (status chips).
+**Scale (4px base):** `4, 8, 12, 16, 24, 32, 48`. Component-internal gaps in px; vertical section rhythm in multiples of 8.
 
-**Elevation (very soft — premium, not heavy):**
+### 5.2 Radius
 
-| Token | Shadow |
-|-------|--------|
-| `shadow-sm` | `0 1px 2px rgba(44,46,34,0.06)` |
-| `shadow-md` | `0 2px 8px rgba(44,46,34,0.08)` |
-| `shadow-lg` | `0 8px 24px rgba(44,46,34,0.10)` |
+**Tailwind's own scale, deliberately not overridden** (owner decision 2026-08-08). `@theme` sets colours, fonts and shadows but no radius:
 
-Prefer borders over shadows for separation; shadows only for overlays (dropdown, modal, popover).
+| Tailwind class | Value | Use |
+|----------------|-------|-----|
+| `rounded-sm` | 4 | — |
+| `rounded-md` | 6 | breadcrumb back, avatar, language-switch segment |
+| `rounded-lg` | 8 | **controls** — buttons, icon buttons, nav items, inputs |
+| `rounded-xl` | 12 | **containers** — cards, panels, dropdowns, table shell |
+| `rounded-2xl` | 16 | — |
+| `rounded-r-3xl` | 24 | **nav drawer trailing edge only** (see below) |
+| `rounded-full` | pill | status chips, language switch, avatars — **not** buttons |
+
+> **Why nothing is overridden.** `--radius-md: 8px` and `--radius-lg: 12px` used to be set here. That pushed `lg` onto 12px, the same value as Tailwind's native `xl` — so two class names rendered identically and `rounded-xl` silently meant "same as `lg`". Removing both overrides restores six distinct steps and, as a bonus, drops `rounded-lg` onto 8px, which is exactly Ant Design's own `borderRadius`. Hand-rolled buttons and AntD buttons now match; under the overrides they were 12 and 8 and did not.
+
+**Control shape.** Every control is a rounded rectangle — icon-only ones included. Radius follows size, not whether the control carries a label. One shape per control at every breakpoint: a button that changes shape on resize reads as two different controls.
+
+The result is a legible hierarchy without any special cases — **controls 8, the container holding them 12, the drawer over everything 24.** Each level is rounder than the one it sits inside.
+
+> **Rejected 2026-08-08: circular icon buttons.** `rounded-full` on the icon-only controls (nav toggle, notifications, breadcrumb back, table row actions) was built and reviewed against the live app, then reverted — the owner's call. Pills read as foreign in a cream/olive system whose every other surface is a soft rectangle, and the circles competed with the language switch, which is a genuine pill. Recorded so it is not re-proposed as an obvious improvement.
+
+**24px exception (owner decision 2026-08-08).** The nav drawer's trailing edge is `rounded-r-3xl`, above the 12px ceiling. It is the only element in the app that floats over a scrim at full viewport height, and 12px on a 248 × full-height panel disappears. Its leading edge stays square — it sits against the viewport, where a radius would leak background through. Above `lg` the same panel is part of the layout and drops the radius entirely (`lg:rounded-none`).
+
+### 5.3 Elevation (very soft — premium, not heavy)
+
+| Token | Shadow | Use |
+|-------|--------|-----|
+| `shadow-sm` | `0 1px 2px rgba(44,46,34,0.06)` | cards, table container |
+| `shadow-md` | `0 2px 8px rgba(44,46,34,0.08)` | raised inline elements |
+| `shadow-lg` | `0 8px 24px rgba(44,46,34,0.10)` | dropdown, modal, popover |
+| `shadow-sidebar` | `4px 0 16px rgba(44,46,34,0.05)` | rail, `lg` and up — directional |
+| `shadow-topbar` | `0 4px 16px rgba(44,46,34,0.05)` | topbar — directional |
+| `shadow-drawer` | `8px 0 32px rgba(44,46,34,0.20)` | nav drawer below `lg` |
+
+Prefer borders over shadows for separation; shadows only for overlays.
+
+`shadow-drawer` is four times the opacity of the rest, deliberately: the drawer sits above a scrim that already darkens the page 40%, and a 5% edge shadow is invisible against it. Elsewhere that weight would be wrong.
+
+### 5.4 Breakpoints & input
+
+Two breakpoints, each set where its own content stops fitting — never at a device size.
+
+| Breakpoint | What changes | Why there |
+|------------|--------------|-----------|
+| `lg` 1024 | Shell: rail ↔ overlay drawer | A 248px permanent rail leaves a 768px tablet ~520px for stock and order tables |
+| `md` 768 | Tables: columns ↔ stacked list (`ResponsiveTable`) | Below this a six-column table can be scrolled but not read |
+
+Input capability is a separate question from width, and answered separately:
+
+- `pointer-coarse:` bumps interactive targets to **44px** (PRODUCT.md: sewing workers on phones). Applies regardless of viewport — a touchscreen laptop gets it too.
+- `hover:` needs no guard. Tailwind v4 already compiles it to `@media (hover: hover)`, so touch devices never latch a hover state.
+- `prefers-reduced-motion` restricts transitions to `opacity` and colour rather than killing them (`index.css`). Less movement, not less feedback.
 
 ---
 
@@ -322,7 +366,24 @@ This keeps AntD theming token-driven and Tailwind as the layout/utility layer, w
 
 - **Primary set: Phosphor** (`@phosphor-icons/react`). Chosen for its weight system (regular / fill / duotone) and full garment-domain coverage (needle, t-shirt, swatches, coat-hanger). Comparison board that backed the decision: `apps/admin/public/icon-preview.html`.
 - **Approved fallback: Heroicons** (`@heroicons/react`) — per-icon exceptions only, when no Phosphor glyph fits. Try Phosphor alternatives first (9 000+ glyphs). One visual language per row: icons sitting in the same row of equal-hierarchy items (nav list, toolbar, menu) must all come from one set.
-- **Single registry rule:** components never import an icon library directly. Every icon goes through `apps/admin/src/shared/icons.tsx` — semantic names (`Icons.edit`, `Icons.logout`), `ph()` / `hero()` adapters normalizing both libraries to one `IconProps` interface, and `MODULE_ICONS` keeping sidebar and module placeholders in sync. Swapping any glyph (including to Heroicons) is a one-line registry change; call sites never change.
+- **Single registry rule:** components never import an icon library directly. Every icon goes through `apps/admin/src/shared/icons.tsx` — semantic names (`Icons.edit`, `Icons.logout`), `ph()` / `hero()` / `custom()` adapters normalizing every source to one `IconProps` interface, and `MODULE_ICONS` keeping sidebar and module placeholders in sync. Swapping any glyph (including to Heroicons) is a one-line registry change; call sites never change.
+
+#### Hand-drawn marks (`custom()`, added 2026-08-08)
+
+A third source, after Phosphor and Heroicons, for shapes **neither set carries**. Currently one user: `Icons.sidebar`, the nav toggle — three bars with the last one short. Phosphor has no three-bar ragged variant (`List` is three equal bars, `TextAlignLeft` is four alternating), so it was drawn.
+
+Reach for it only after both sets have been searched. When you do, the drawing is **not** freehand — match Phosphor's geometry so the mark reads as one of the set rather than a later addition in a different weight:
+
+| Constraint | Value | Why |
+|------------|-------|-----|
+| `viewBox` | `0 0 256 256` | Phosphor's own canvas; anything else changes the apparent stroke weight |
+| Bar / stroke thickness | 16 units | matches `regular` |
+| Cap radius | 8 (`a8,8,0,0,1,0,16`) | Phosphor's rounded-cap idiom |
+| Safe margin | 40 units from each edge | where `List`, `TextAlignLeft` and siblings start |
+
+Borrow the actual coordinates of the nearest sibling icon rather than inventing them — `Icons.sidebar` reuses `List`'s y centres (64 / 128 / 192) and x span (40 → 216), changing only the last bar's end (152). That is the whole reason it sits correctly beside 30 imported glyphs.
+
+`custom()` is single-weight on purpose: a mark defined by one path has no `fill` variant, so `weight` is accepted and ignored. Never give a hand-drawn mark to an active nav item, which relies on `weight="fill"`.
 - **Weights:** `regular` by default; `fill` for the active nav item. The `hero()` adapter maps `weight="fill"` to the solid variant, so the active pattern survives a library swap. Don't mix weights within one row of equal items.
 - **Sizes** (`size` prop, px): nav items 19, dropdown menu items 17, buttons 15–17, input prefixes 15–16, empty/error state art 26–30. Icon-only buttons keep the ≥ 36px hit area from §10.
 - **Color:** `text-ink-tertiary` by default in chrome, `olive-700` on hover (via `group-hover`), white on active/olive surfaces. Icons never introduce colors outside the palette.
