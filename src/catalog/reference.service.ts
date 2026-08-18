@@ -1,0 +1,82 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { DEFAULT_LOCALE, Translations } from '../shared/i18n/locales';
+import {
+  DeepPartial,
+  FindOptionsOrder,
+  FindOptionsWhere,
+  Not,
+  QueryDeepPartialEntity,
+  Repository,
+} from 'typeorm';
+
+/** What the small lookup tables have in common. */
+export interface ReferenceRow {
+  id: number;
+  name: string;
+  translations: Translations;
+  isActive: boolean;
+}
+
+export abstract class ReferenceService<T extends ReferenceRow> {
+  protected constructor(
+    protected readonly repo: Repository<T>,
+    private readonly label: string,
+    private readonly order: FindOptionsOrder<T>,
+  ) {}
+
+  findAll(includeInactive = false): Promise<T[]> {
+    return this.repo.find({
+      where: includeInactive ? {} : ({ isActive: true } as FindOptionsWhere<T>),
+      order: this.order,
+    });
+  }
+
+  async findOne(id: number): Promise<T> {
+    const row = await this.repo.findOneBy({ id } as FindOptionsWhere<T>);
+    if (!row) {
+      throw new NotFoundException(`${this.label} not found`);
+    }
+    return row;
+  }
+
+  async create(dto: DeepPartial<T>): Promise<T> {
+    const name = dto.name as string;
+    await this.assertNameFree(name);
+    return this.repo.save(this.repo.create(this.defaultUz(dto, name)));
+  }
+
+  async update(id: number, dto: DeepPartial<T>): Promise<T> {
+    const current = await this.findOne(id);
+    if (dto.name !== undefined) {
+      await this.assertNameFree(dto.name, id);
+    }
+    const patch =
+      dto.translations === undefined
+        ? dto
+        : this.defaultUz(dto, dto.name ?? current.name);
+
+    await this.repo.update(id, patch as QueryDeepPartialEntity<T>);
+    return this.findOne(id);
+  }
+
+  private defaultUz(dto: DeepPartial<T>, name: string): DeepPartial<T> {
+    const given = dto.translations as Translations | undefined;
+    if (given?.[DEFAULT_LOCALE]) {
+      return dto;
+    }
+    return {
+      ...dto,
+      translations: { ...given, [DEFAULT_LOCALE]: name },
+    };
+  }
+
+  private async assertNameFree(name: string, exceptId?: number): Promise<void> {
+    const where = { name } as FindOptionsWhere<T>;
+    if (exceptId !== undefined) {
+      Object.assign(where, { id: Not(exceptId) });
+    }
+    if (await this.repo.existsBy(where)) {
+      throw new ConflictException(`${this.label} name already in use`);
+    }
+  }
+}
