@@ -60,7 +60,7 @@ Sarfni norma bo'yicha modellaymiz (retsept asosida, avtomat rasxod), **lekin haq
 **4.2 Ish haqi — avval kiyimga tekis, keyin operatsiya bo'yicha.**
 Tikuv sexlari deyarli har doim **operatsiya bo'yicha sdelniy** ishlaydi (bichuvchi, tikuvchi, dazmolchi har biri har bir donaga). To'liq routing murakkab, shuning uchun MVP kiyimga tekis stavkadan boshlanadi va model keyin operatsiya bo'yicha kengaytirishga tayyor bo'ladi (qayta yozmasdan).
 
-**4.3 Variantlar majburiy — model + o'lcham + rang = SKU.**
+**4.3 Variantlar majburiy — mahsulot + o'lcham + rang = SKU.**
 Marketplace bo'lmasa ham, kiyim ombori o'lcham/rangsiz ma'nosiz. Tayyor kiyim SKU darajasida, xom-ashyo esa o'lchov birligi bo'yicha (metr, kg, dona, rulon) hisoblanadi.
 
 **4.4 Pul — bitta maydon emas, daftar (ledger) sifatida yuritiladi.**
@@ -72,20 +72,23 @@ Buyurtma admin paneldan kiritildimi yoki mijoz onlayn berdimi — ichida bir xil
 **4.6 Barcha ombor uchun "ledger" (harakatlar daftari) usuli.**
 Har bir ombor o'zgarishi (material yoki tayyor kiyim) — o'zgarmas tranzaksiya (KIRIM/CHIQIM/**ADJUSTMENT**, miqdor, tannarx, manba, vaqt). Joriy qoldiq daftardan hisoblanadi/keshlanadi. Bu **statistika, audit izi va tannarx tarixini bepul beradi** — shu sababli statistika alohida faza emas. `ADJUSTMENT` yozuvlari **inventarizatsiyadan** keladi: sanoq vs tizim miqdori, farq sabab bilan daftarга yoziladi.
 
-**4.7 To'liq multi-currency, muhrlangan qo'sh qiymatlar bilan.**
-Material ko'pincha USD'da olinadi, sotuv va ish haqi — so'mda. Tizimdagi har bir pul qiymati bitta **Money pattern** dan foydalanadi va tranzaksiya paytida muhrlanadi:
+**4.7 To'liq multi-currency, yozuv paytida muhrlanadi.**
+Material ko'pincha USD'da olinadi, sotuv va ish haqi — so'mda. Tizimdagi har bir pul qiymati bitta **Money pattern** dan foydalanadi va qator yozilganda muhrlanadi:
 
 ```
-{ currency (UZS|USD), amount, rateUzsPerUsd (o'sha kungi kurs),
-  uzsValue, usdValue }   ← ikkala ekvivalent yozuv paytida muhrlanadi
+{ currency (UZS|USD), amount, rate }   ← rate = bitta dollarga necha so'm, o'sha kuni
 ```
 
-- Hisobot va panellarni **UZS yoki USD switcher** bilan ko'rish mumkin; switcher faqat qaysi muhrlangan ustunni yig'ishni tanlaydi.
-- **Retro-revalyatsiya yo'q** — kurs o'zgarsa, tarixiy yozuvlar hech qachon o'zgarmaydi.
+- Ikkinchi valyuta **saqlanmaydi**. Uchtasi ham muhrlangani uchun ikkala ekvivalent allaqachon aniqlangan — chetlashadigan narsa qolmaydi.
+- Hisobot va panellarni **UZS yoki USD switcher** bilan ko'rish mumkin; switcher har qatorning o'z muhrlangan kursi bilan o'giradi.
+- **Retro-revalyatsiya yo'q** — kurs qatorga *ko'chirib yoziladi*, havola qilinmaydi. Ya'ni keyinchalik `ExchangeRate` qatorini tuzatish allaqachon yozilgan hech narsani o'zgartirmaydi.
+- O'girish yo'nalishi faqat bitta joyda yashaydi: `src/shared/money.ts`. Boshqa hech qayerda kursga ko'paytirish yoki bo'lish mumkin emas.
 - Kurslar: admin qo'lda kiritadi va/yoki **CBU (O'zbekiston Markaziy banki) API**sidan olinadi; `ExchangeRate` jadvalida saqlanadi (har sanaga bitta kurs).
 
+> **2026-08-17 da qayta ko'rildi — egasining qarori.** Bu naqsh avval `uzsValue` va `usdValue` ni ham saqlar edi, ya'ni har qatorda ikkala ekvivalentni moddiylashtirardi. Ular hisoblanadigan ma'lumot sifatida olib tashlandi. Qaror qabul qilishdan oldin o'lchangan narxi: UZS→USD o'girish tugamaydigan o'nlik kasr (132 000 ÷ 12 650 = 10.4347826…), ya'ni o'girishning qo'lda yozilgan ikki nusxasi bir-biriga zid chiqishi mumkin. Buni yuqoridagi "bitta yordamchi" qoidasi ushlab turadi; uchinchi o'qish joyi paydo bo'lsa, `VIEW` ga chiqariladi. Juftlikni moddiylashtirish — hisobot solishtirishi zarurligini isbotlasa, zaxira yo'l bo'lib qoladi.
+
 **4.8 Tannarx metodi — o'rtacha tortilgan (weighted average).**
-Material ombordan chiqqanda (sexga berilganda) uning birlik narxi — hozir ombordagi zaxiraning **o'rtacha tortilgan** narxi, har KIRIMdan keyin qayta hisoblanadi. O'rtacha muhrlangan qiymatlardan **UZS va USD'da parallel** yuritiladi (4.7 ning oqibati). FIFO/partiya tracking hozircha aniq qamrovdan tashqarida.
+Material ombordan chiqqanda (sexga berilganda) uning birlik narxi — hozir ombordagi zaxiraning **o'rtacha tortilgan** narxi, har KIRIMdan keyin qayta hisoblanadi. O'rtacha **UZS va USD'da parallel** yuritiladi va §4.7 dan farqli — bu takror *emas*: har KIRIM boshqa kursni muhrlagan, shuning uchun ikki o'rtachani bog'laydigan yagona kurs yo'q. Misol — 10 dona $10 dan ikki kirim, biri 12 000, ikkinchisi 13 000 kurs bilan: USD o'rtacha $10.00, UZS o'rtacha 125 000 so'm; 125 000 ÷ 10 = 12 500, bunday kurs hech qachon mavjud bo'lmagan. Demak ikkala o'rtacha ham mustaqil fakt va ikkalasi ham saqlanadi. Kelib chiqadigan qoida: **bitta muhrlangan qaror bitta summa va bitta kursni saqlaydi; ko'p qaror ustidagi o'rtacha ikkala valyutani saqlaydi.** FIFO/partiya tracking hozircha aniq qamrovdan tashqarida.
 
 **4.9 O'lchov birliklari — o'lchamlar (dimension) + material darajasidagi konversiya.**
 - Har birlik bir **o'lchamga** tegishli: uzunlik (m, sm), massa (kg, g), dona (dona, juft), yuza (m²).
@@ -162,13 +165,13 @@ Sifat uzluksiz; har faza bularni **bilan birga** topshiradi, ulardan keyin emas:
 
 ## 8. Data model umumiy ko'rinishi (fazalar bo'yicha)
 
-Quyidagi pul tipidagi maydonlar §4.7 dagi **Money pattern**dan foydalanadi (valyuta, summa, kurs, muhrlangan UZS+USD qiymatlar).
+Quyidagi pul tipidagi maydonlar §4.7 dagi **Money pattern**dan foydalanadi (valyuta, summa, kurs).
 
 **Faza 0:** `User`, `Role` (seed qilingan jadval + `RoleCode` enum gibridi — PHASE_0 §5 ga qarang), `RefreshToken`
 
-**Faza 1:** `Unit` (kod, nom, dimension, factorToDimensionBase), `ExchangeRate` (sana, rateUzsPerUsd, manba), `Material` (kanonik birlik, material darajasidagi o'lchamlararo koeffitsiyentlar, minStock, keshlangan o'rtacha tannarx UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (xarid hujjati: yetkazib beruvchi, valyuta, totalAmount, paidAmount), `MaterialTransaction` (KIRIM/CHIQIM/ADJUSTMENT daftari: material, kanonik birlikdagi miqdor, asl miqdor+birlik, Money ko'rinishidagi birlik narx, refType, refId, sana), `Stocktake` + `StocktakeLine`
+**Faza 1:** `Unit` (kod, nom, dimension, factorToDimensionBase), `ExchangeRate` (sana, rate, manba), `Material` (kanonik birlik, material darajasidagi o'lchamlararo koeffitsiyentlar, minStock, keshlangan o'rtacha tannarx UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (xarid hujjati: yetkazib beruvchi, valyuta, totalAmount, paidAmount), `MaterialTransaction` (KIRIM/CHIQIM/ADJUSTMENT daftari: material, kanonik birlikdagi miqdor, asl miqdor+birlik, Money ko'rinishidagi birlik narx, refType, refId, sana), `Stocktake` + `StocktakeLine`
 
-**Faza 2:** `ProductModel`, `ProductVariant` (o'lcham, rang, sku, sellPrice — Money), `FinishedGoodsTransaction` (variant, turi, **daraja A|B**, miqdor, unitCost — Money, ref, sana)
+**Faza 2:** `ProductCategory`, `Size`, `Color`, `Product` (nom, kod, kategoriya), `ProductVariant` (mahsulot, o'lcham, rang, sku, minStock — mahsulot+o'lcham+rang bo'yicha unique), `ProductPrice` (faqat qo'shiladigan narx ro'yxati: variant, sana, Money, baseCost, keshlangan ustama), `WarehouseProductMovement` (o'zgarmas daftar: variant, KIRIM/CHIQIM/ADJUSTMENT, **daraja A|BRAK**, ishorali miqdor, unitCost — Money, costSource, refType, refId), `WarehouseProductBalance` (variant+daraja → miqdor — hosila), `WarehouseProductCost` (variant → o'rtacha tannarx UZS/USD — hosila), `Stocktake` + `StocktakeLine`
 
 **Faza 3:** `Bom` / `Norma` + `BomItem` (material, materialning kanonik birligida birlikka miqdor), `ProductionOrder` (model/variant, miqdor, mas'ul, srok, status, sourceOrderId?), `ProductionMaterialUsage` (rejaMiqdor, faktMiqdor), yakun natijasi (qtyGradeA, qtyGradeB)
 
@@ -256,7 +259,7 @@ Bitta qoida ("username ≥ 3 belgi") aynan bitta joyda mavjud; FE/BE drift konst
 | Ish haqi modeli murakkabligi | Avval kiyimga tekis; keyin operatsiya bo'yicha qilishga tayyor |
 | Scope creep (qamrov kengayishi) | Qat'iy faza tartibi; har faza ishlatsa bo'ladigan holda chiqadi |
 | Ombor og'ishi (drift) | O'zgarmas daftar + inventarizatsiya bilan solishtirish |
-| **Multi-currency murakkabligi** | Muhrlangan qo'sh qiymatli Money pattern (§4.7); retro-revalyatsiya yo'q; kurslar tranzaksiya bo'yicha muhrlanadi |
+| **Multi-currency murakkabligi** | Money pattern §4.7 — kurs har qatorga ko'chirib yoziladi, shuning uchun hech narsa retro-revalyatsiya bo'lmaydi; o'girish yo'nalishi bitta yordamchida |
 | **Birlik konversiyasi xatolari** | Har materialga kanonik birlik; o'lchamlararo koeffitsiyentlar material darajasida va kiritish paytida ko'rsatiladi; asl kiritilgan qiymat saqlanadi |
 | **Nx yangilanish bog'liqligi** | §9.3 versiya siyosati: Nx release-train'iga ergashish; pre-release framework major'lardan qochish |
 | Kech integratsiya sinovi (bottom-up riski) | Modullararo kontraktlar birinchi kundan `libs/shared`da; testlar har faza bilan chiqadi (§7) |
@@ -269,9 +272,9 @@ Bitta qoida ("username ≥ 3 belgi") aynan bitta joyda mavjud; FE/BE drift konst
 - **Prixod / KIRIM** — omborga kirish (xarid yoki ishlab chiqarish natijasi).
 - **Rasxod / CHIQIM** — ombordan chiqish (sarf yoki sotuv).
 - **ADJUSTMENT** — inventarizatsiyadan kelgan daftar tuzatishi.
-- **SKU** — noyob ombor birligi = model + o'lcham + rang.
+- **SKU** — noyob ombor birligi = mahsulot + o'lcham + rang.
 - **A daraja / B daraja (brak)** — yaroqli va nuqsonli ishlab chiqarish natijasi.
-- **Money pattern** — tranzaksiya paytida muhrlangan `{valyuta, summa, kurs, UZS va USD qiymatlar}` (§4.7).
+- **Money pattern** — qator yozilganda muhrlangan `{valyuta, summa, kurs}` (§4.7).
 - **Kanonik birlik** — material zaxirasi yuritiladigan yagona birlik.
 - **Make-to-stock** — ombor uchun oldindan ishlab chiqarish.
 - **Make-to-order** — individual buyurtmaga ko'ra ishlab chiqarish.

@@ -39,7 +39,7 @@ Birinchi **ishlatsa bo'ladigan** modul: omborchi material xaridlarini (KIRIM) yo
 
 | # | Qaror | Manba |
 |---|-------|-------|
-| D1 | To'liq multi-currency; har pul qiymati yozuv paytida `{currency, amount, rate, uzsValue, usdValue}` sifatida muhrlanadi; retro-revalyatsiya yo'q; hisobotlar UZS/USD almashinadigan | Biznes reja §4.7 |
+| D1 | To'liq multi-currency; har pul qiymati yozuv paytida `{currency, amount, rate}` sifatida muhrlanadi; retro-revalyatsiya yo'q; hisobotlar har qatorning o'z muhrlangan kursi bilan UZS/USD almashinadigan | Biznes reja §4.7 (2026-08-17 da qayta ko'rildi) |
 | D2 | Tannarx = **o'rtacha tortilgan**, UZS va USD'da parallel yuritiladi | §4.8 |
 | D3 | Birliklarning **o'lchamlari** bor; bir o'lcham ichida global konversiya; o'lchamlararo — **material darajasidagi koeffitsiyent**; daftar doim materialning **kanonik birligida** | §4.9 |
 | D4 | Daftar o'zgarmas; tuzatishlar teskari yozuv bilan, tahrir bilan emas | §4.6 |
@@ -66,7 +66,7 @@ Daftar **kanonik miqdorni** hamda audit uchun asl `q`/`U`ni saqlaydi. Material d
 
 ## 5. Valyuta va Money pattern
 
-**`exchange_rates`** — har sanaga bitta yozuv: `date` (unique), `rate_uzs_per_usd`, `source` (`MANUAL` | `CBU`). `D` sanasidagi tranzaksiya `date ≤ D` bo'lgan eng so'nggi kursni oladi; topilmasa API aniq xato qaytaradi va UI admindan kurs kiritishni (yoki CBU API'dan olishni) so'raydi.
+**`exchange_rates`** — har sanaga bitta yozuv: `date` (unique), `rate`, `source` (`MANUAL` | `CBU`). `D` sanasidagi tranzaksiya `date ≤ D` bo'lgan eng so'nggi kursni oladi; topilmasa API aniq xato qaytaradi va UI admindan kurs kiritishni (yoki CBU API'dan olishni) so'raydi.
 
 **Money qiymati** (TypeORM embedded / ustunlar guruhi, Zod sxemasi `libs/shared`da):
 
@@ -74,7 +74,7 @@ Daftar **kanonik miqdorni** hamda audit uchun asl `q`/`U`ni saqlaydi. Material d
 |--------|------|---------|
 | `currency` | enum `UZS`\|`USD` | foydalanuvchi kiritgan valyuta |
 | `amount` | numeric(18,2) | kiritilgan valyutadagi qiymat |
-| `rate_uzs_per_usd` | numeric(14,2) | o'sha kunda qo'llangan kurs |
+| `rate` | numeric(14,2) | bitta dollarga necha so'm, o'sha kunda qo'llangan |
 | `uzs_value` | numeric(18,2) | muhrlangan UZS ekvivalent |
 | `usd_value` | numeric(18,4) | muhrlangan USD ekvivalent (4 xona — birlik narxlar kichik bo'lishi mumkin) |
 
@@ -103,7 +103,7 @@ Miqdorlar: kanonik birlikda `numeric(14,3)`, boshqacha aytilmasa.
 **`material_unit_factors`** — `material_id`, `from_unit_id`, `factor` (1 from-birlik = factor × kanonik birlik), unique (material, from_unit).
 
 **`material_receipts`** (xarid hujjati; o'tkazilganda KIRIM daftar yozuvlarini yaratadi)
-`id`, `number` (avto, masalan `RCP-2026-0001`), `supplier_id`, `date`, `currency`, `rate_uzs_per_usd`, `total` (Money, qatorlardan hisoblanadi), `paid_amount` numeric — `total` bilan bir valyutada (kreditorka uchun eshik ochiq), `notes`, `created_by`, timestamps.
+`id`, `number` (avto, masalan `RCP-2026-0001`), `supplier_id`, `date`, `currency`, `rate`, `total` (Money, qatorlardan hisoblanadi), `paid_amount` numeric — `total` bilan bir valyutada (kreditorka uchun eshik ochiq), `notes`, `created_by`, timestamps.
 
 **`material_receipt_items`** — `receipt_id`, `material_id`, `qty_entered` + `unit_entered_id`, `qty_canonical`, `unit_price` (Money, kiritilgan birlikka), `line_total` (Money).
 

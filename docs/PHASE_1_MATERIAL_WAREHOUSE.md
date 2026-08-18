@@ -39,7 +39,7 @@ The first **usable** module: the warehouse keeper records material purchases (IN
 
 | # | Decision | Source |
 |---|----------|--------|
-| D1 | Full multi-currency; every money value frozen as `{currency, amount, rate, uzsValue, usdValue}` at write time; no retroactive revaluation; reports switchable UZS/USD | Business plan §4.7 |
+| D1 | Full multi-currency; every money value frozen as `{currency, amount, rate}` at write time; no retroactive revaluation; reports switchable UZS/USD via each row's own frozen rate | Business plan §4.7 (revised 2026-08-17) |
 | D2 | Costing = **weighted average**, maintained in parallel in UZS and USD | §4.8 |
 | D3 | Units have **dimensions**; global conversion within a dimension; **per-material factors** across dimensions; ledger always in the material's **canonical unit** | §4.9 |
 | D4 | Ledger is immutable; corrections are reversing entries, never edits | §4.6 |
@@ -66,7 +66,7 @@ The ledger stores the **canonical quantity** plus the original `q`/`U` for audit
 
 ## 5. Currency & the Money pattern
 
-**`exchange_rates`** — one row per date: `date` (unique), `rate_uzs_per_usd`, `source` (`MANUAL` | `CBU`). A transaction dated `D` uses the rate with the latest `date ≤ D`; if none exists, the API returns a clear error and the UI asks the admin to enter one (or pull from the CBU API).
+**`exchange_rates`** — one row per date: `date` (unique), `rate`, `source` (`MANUAL` | `CBU`). A transaction dated `D` uses the rate with the latest `date ≤ D`; if none exists, the API returns a clear error and the UI asks the admin to enter one (or pull from the CBU API).
 
 **Money embedded value** (TypeORM embedded / column group, Zod schema in `libs/shared`):
 
@@ -74,7 +74,7 @@ The ledger stores the **canonical quantity** plus the original `q`/`U` for audit
 |-------|------|---------|
 | `currency` | enum `UZS`\|`USD` | currency the user entered |
 | `amount` | numeric(18,2) | value in the entered currency |
-| `rate_uzs_per_usd` | numeric(14,2) | rate applied on that date |
+| `rate` | numeric(14,2) | UZS per USD, applied on that date |
 | `uzs_value` | numeric(18,2) | frozen UZS equivalent |
 | `usd_value` | numeric(18,4) | frozen USD equivalent (4 dp — unit costs can be small) |
 
@@ -103,7 +103,7 @@ Quantities: `numeric(14,3)` in the canonical unit unless stated.
 **`material_unit_factors`** — `material_id`, `from_unit_id`, `factor` (1 from-unit = factor × canonical unit), unique (material, from_unit).
 
 **`material_receipts`** (purchase document; posting creates IN ledger rows)
-`id`, `number` (auto, e.g. `RCP-2026-0001`), `supplier_id`, `date`, `currency`, `rate_uzs_per_usd`, `total` (Money, computed from lines), `paid_amount` numeric — same currency as `total` (door left open for payables), `notes`, `created_by`, timestamps.
+`id`, `number` (auto, e.g. `RCP-2026-0001`), `supplier_id`, `date`, `currency`, `rate`, `total` (Money, computed from lines), `paid_amount` numeric — same currency as `total` (door left open for payables), `notes`, `created_by`, timestamps.
 
 **`material_receipt_items`** — `receipt_id`, `material_id`, `qty_entered` + `unit_entered_id`, `qty_canonical`, `unit_price` (Money, per entered unit), `line_total` (Money).
 

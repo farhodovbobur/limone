@@ -59,7 +59,7 @@ Model consumption by norma (recipe-based, auto-deducted), **but also record actu
 **4.2 Wages — start flat per garment, evolve to per-operation.**
 Garment workshops are almost always **piece-rate per operation** (cutter, sewer, presser each paid per piece per operation). Full routing is complex, so the MVP starts with a flat rate per garment, and the model is designed so per-operation routing can be added without a rewrite.
 
-**4.3 Variants are mandatory — model + size + color = SKU.**
+**4.3 Variants are mandatory — product + size + color = SKU.**
 Even with no marketplace, a clothing warehouse is meaningless without size/color tracking. Finished goods are tracked at SKU level; raw materials are tracked by unit of measure (meter, kg, piece, roll).
 
 **4.4 Money is tracked as ledgers, not single fields.**
@@ -71,20 +71,23 @@ An order is the same whether entered by an admin or placed online by a customer.
 **4.6 Ledger pattern for all stock.**
 Every stock change (material or finished goods) is an immutable transaction (IN/OUT/**ADJUSTMENT**, quantity, unit cost, reference, timestamp). Current stock is derived/cached from the ledger. This gives **statistics, audit trail, and cost history for free** — and is why statistics is not a separate phase. `ADJUSTMENT` entries come from **stocktakes (inventarizatsiya)**: counted vs. system quantity, difference written to the ledger with a reason.
 
-**4.7 Full multi-currency with frozen dual values.**
-Materials are often bought in USD, sales and wages are in UZS. Every money value in the system uses one **Money pattern**, sealed at transaction time:
+**4.7 Full multi-currency, frozen at write time.**
+Materials are often bought in USD, sales and wages are in UZS. Every money value in the system uses one **Money pattern**, sealed when the row is written:
 
 ```
-{ currency (UZS|USD), amount, rateUzsPerUsd (rate on that date),
-  uzsValue, usdValue }   ← both equivalents frozen when the row is written
+{ currency (UZS|USD), amount, rate }   ← rate = how many UZS one USD buys, that day
 ```
 
-- Reports and dashboards can be viewed in **UZS or USD via a switcher**; the switcher only selects which frozen column to sum.
-- **No retroactive revaluation** — historical rows never change when the rate changes.
+- The other currency is **not stored**. All three fields are frozen, so both equivalents are already determined — nothing is left to drift.
+- Reports and dashboards can be viewed in **UZS or USD via a switcher**; the switcher converts using each row's own frozen rate.
+- **No retroactive revaluation** — the rate is *copied onto the row*, not referenced. Correcting an `ExchangeRate` row later therefore changes nothing that was already written.
+- The conversion direction lives in exactly one place, `src/shared/money.ts`. Nothing else may divide or multiply by a rate.
 - Exchange rates: entered manually by an admin and/or fetched from the **CBU (Central Bank of Uzbekistan) API**; stored in an `ExchangeRate` table (one rate per date).
 
+> **Revised 2026-08-17 — owner decision.** This pattern originally also stored `uzsValue` and `usdValue`, materialising both equivalents on every row. They were dropped as derivable data. The accepted cost, measured before deciding: a UZS→USD conversion is a non-terminating decimal (132 000 ÷ 12 650 = 10.4347826…), so two hand-written copies of the conversion could disagree. This is contained by the single-helper rule above, promoted to a database view if a third read path appears. Materialising the pair remains the fallback if report reconciliation ever proves it necessary.
+
 **4.8 Costing method — weighted average.**
-When material leaves the warehouse (issued to production), its unit cost is the **weighted average** of what is currently in stock, recomputed after every IN. The average is maintained **in parallel in UZS and USD** from the frozen values (consequence of 4.7). FIFO/batch tracking is explicitly out of scope for now.
+When material leaves the warehouse (issued to production), its unit cost is the **weighted average** of what is currently in stock, recomputed after every IN. The average is maintained **in parallel in UZS and USD**, and unlike §4.7 this is *not* redundancy: each IN froze a different rate, so no single rate connects the two averages. Worked example — two receipts of 10 pieces at $10, one at rate 12 000 and one at 13 000, give a USD average of $10.00 and a UZS average of 125 000 so'm; 125 000 ÷ 10 = 12 500, a rate that never existed. Both averages are therefore independent facts and both are stored. The rule that follows: **a single frozen decision stores one amount and one rate; an average over many decisions stores both currencies.** FIFO/batch tracking is explicitly out of scope for now.
 
 **4.9 Units of measure — dimensions + per-material conversion.**
 - Every unit belongs to a **dimension**: length (m, cm), mass (kg, g), count (piece, pair), area (m²).
@@ -122,9 +125,11 @@ Auth, roles (admin, warehouse keeper, workshop manager, worker, sales), app skel
 Units of measure, exchange rates, raw-material catalog, suppliers, material **IN** (purchase receipts with cost, currency, total/paid) and **OUT**, current stock, weighted-average cost, low-stock alerts, **stocktake → ADJUSTMENT**. Detailed design: `docs/PHASE_1_MATERIAL_WAREHOUSE.md`.
 *Deliverable:* the warehouse keeper starts using it immediately.
 
-### Phase 2 — Catalog + finished-goods warehouse
-Garment models, variants (size/color = SKU), finished-goods **IN/OUT/stock** with **quality grades (A/brak)**, finished-goods stocktake. Finished goods can enter either via production (Phase 3) or by direct purchase.
-*Deliverable:* full clothing inventory control; the foundation for sales.
+### Phase 2 — Catalog + finished-goods warehouse + price list  ← **built first** (owner decision 2026-08-08)
+Garment products, variants (size/color = SKU), **price list** (one selling price per variant, with history), finished-goods **IN/OUT/stock** with **quality grades (A/brak)**, finished-goods stocktake. Detailed design: `docs/PHASE_2_FINISHED_GOODS.md`.
+*Deliverable:* full clothing inventory control + a usable price list; the foundation for sales.
+
+> **Order changed 2026-08-08.** Phase 2 is implemented before Phase 1: the workshop needs its garments counted and priced before its fabric is tracked. Only `ExchangeRate` is pulled forward from Phase 1 — the Money pattern needs it. Two consequences, accepted: the ledger pattern is now *invented* in Phase 2 and copied by Phase 1 later, and finished-goods cost is entered by hand until production (Phase 3) can compute it. Every ledger row records `costSource` (`MANUAL` | `PURCHASE` | `PRODUCTION`) so the two never mix silently.
 
 ### Phase 3 — BOM (norma) + Production
 Per-model norma, production orders (work orders), task assignment to the workshop, status pipeline (new → cutting → sewing → done → received), material consumption by norma (planned vs actual), completion split into **A / brak** → finished-goods IN.
@@ -161,13 +166,13 @@ Quality is continuous; each phase ships **with** these, not before them:
 
 ## 8. Data model overview (by phase)
 
-Money-typed fields below use the **Money pattern** of §4.7 (currency, amount, rate, frozen UZS+USD values).
+Money-typed fields below use the **Money pattern** of §4.7 (currency, amount, rate).
 
 **Phase 0:** `User`, `Role` (seeded table + `RoleCode` enum hybrid — see PHASE_0 §5), `RefreshToken`
 
-**Phase 1:** `Unit` (code, name, dimension, factorToDimensionBase), `ExchangeRate` (date, rateUzsPerUsd, source), `Material` (canonical unit, per-material cross-dimension factors, minStock, cached avg cost UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (purchase document: supplier, currency, totalAmount, paidAmount), `MaterialTransaction` (IN/OUT/ADJUSTMENT ledger: material, qty in canonical unit, original qty+unit, unit cost as Money, refType, refId, date), `Stocktake` + `StocktakeLine`
+**Phase 1:** `Unit` (code, name, dimension, factorToDimensionBase), `ExchangeRate` (date, rate, source), `Material` (canonical unit, per-material cross-dimension factors, minStock, cached avg cost UZS/USD), `Supplier`, `MaterialReceipt` + `MaterialReceiptItem` (purchase document: supplier, currency, totalAmount, paidAmount), `MaterialTransaction` (IN/OUT/ADJUSTMENT ledger: material, qty in canonical unit, original qty+unit, unit cost as Money, refType, refId, date), `Stocktake` + `StocktakeLine`
 
-**Phase 2:** `ProductModel`, `ProductVariant` (size, color, sku, sellPrice as Money), `FinishedGoodsTransaction` (variant, type, **grade A|B**, qty, unitCost as Money, ref, date)
+**Phase 2:** `ProductCategory`, `Size`, `Color`, `Product` (name, code, category), `ProductVariant` (product, size, color, sku, minStock — unique on product+size+color), `ProductPrice` (append-only list price: variant, date, Money, baseCost, cached markup), `WarehouseProductMovement` (immutable ledger: variant, IN/OUT/ADJUSTMENT, **grade A|BRAK**, signed qty, unitCost as Money, costSource, refType, refId), `WarehouseProductBalance` (variant+grade → qty — derived), `WarehouseProductCost` (variant → avg cost UZS/USD — derived), `Stocktake` + `StocktakeLine`
 
 **Phase 3:** `Bom` / `Norma` + `BomItem` (material, qtyPerUnit in material's canonical unit), `ProductionOrder` (model/variant, qty, assignee, deadline, status, sourceOrderId?), `ProductionMaterialUsage` (plannedQty, actualQty), completion result (qtyGradeA, qtyGradeB)
 
@@ -255,7 +260,7 @@ One rule ("username ≥ 3 chars") exists in exactly one place; FE/BE drift is im
 | Wage model complexity | Start flat per garment; design for per-operation later |
 | Scope creep | Strict phase discipline; each phase ships usable |
 | Inventory drift | Immutable ledger + stocktake reconciliation |
-| **Multi-currency complexity** | Frozen dual-value Money pattern (§4.7); no retroactive revaluation; rates sealed per transaction |
+| **Multi-currency complexity** | Money pattern §4.7 — the rate is copied onto each row, so nothing revalues retroactively; one helper owns the conversion direction |
 | **Unit-conversion mistakes** | Canonical unit per material; cross-dimension factors are per-material and shown at entry time; original entry preserved |
 | **Nx upgrade coupling** | Version policy §9.3: follow Nx release train; avoid pre-release framework majors |
 | Late integration testing (bottom-up risk) | Cross-module contracts live in `libs/shared` from day one; tests ship with each phase (§7) |
@@ -268,9 +273,9 @@ One rule ("username ≥ 3 chars") exists in exactly one place; FE/BE drift is im
 - **Prixod / IN** — stock entry (purchase or production output).
 - **Rasxod / OUT** — stock exit (consumption or sale).
 - **ADJUSTMENT** — ledger correction from a stocktake (inventarizatsiya).
-- **SKU** — unique stock unit = model + size + color.
-- **Grade A / Grade B (brak)** — good vs. defective production output.
-- **Money pattern** — `{currency, amount, rate, frozen UZS & USD values}` sealed at transaction time (§4.7).
+- **SKU** — unique stock unit = product + size + color.
+- **Grade A / BRAK** — good vs. defective production output. Stock is counted per (variant, grade); cost is per variant.
+- **Money pattern** — `{currency, amount, rate}` sealed when the row is written (§4.7).
 - **Canonical unit** — the single unit a material's stock is kept in.
 - **Make-to-stock** — produced in advance for the warehouse.
 - **Make-to-order** — produced on demand from a custom order.
