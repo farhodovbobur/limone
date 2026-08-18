@@ -6,6 +6,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CatalogModule } from './catalog/catalog.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
     AuthModule,
     UsersModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
