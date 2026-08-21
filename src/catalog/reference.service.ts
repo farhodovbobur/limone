@@ -6,6 +6,7 @@ import {
   FindOptionsWhere,
   Not,
   QueryDeepPartialEntity,
+  QueryFailedError,
   Repository,
 } from 'typeorm';
 
@@ -17,11 +18,16 @@ export interface ReferenceRow {
   isActive: boolean;
 }
 
+/** True for PostgreSQL's unique-constraint violation. */
+export const isUniqueViolation = (error: unknown): boolean =>
+  error instanceof QueryFailedError &&
+  (error.driverError as { code?: string }).code === '23505';
+
 export abstract class ReferenceService<T extends ReferenceRow> {
   protected constructor(
     protected readonly repo: Repository<T>,
-    private readonly label: string,
-    private readonly order: FindOptionsOrder<T>,
+    protected readonly label: string,
+    protected readonly order: FindOptionsOrder<T>,
   ) {}
 
   findAll(includeInactive = false): Promise<T[]> {
@@ -42,11 +48,18 @@ export abstract class ReferenceService<T extends ReferenceRow> {
   async create(dto: DeepPartial<T>): Promise<T> {
     const name = dto.name as string;
     await this.assertNameFree(name);
-    return this.repo.save(this.repo.create(this.defaultUz(dto, name)));
+    try {
+      return await this.repo.save(this.repo.create(this.defaultUz(dto, name)));
+    } catch (error) {
+      this.rethrowConflict(error);
+    }
   }
 
   async update(id: number, dto: DeepPartial<T>): Promise<T> {
     const current = await this.findOne(id);
+    if (Object.keys(dto).length === 0) {
+      return current;
+    }
     if (dto.name !== undefined) {
       await this.assertNameFree(dto.name, id);
     }
@@ -54,8 +67,11 @@ export abstract class ReferenceService<T extends ReferenceRow> {
       dto.translations === undefined
         ? dto
         : this.defaultUz(dto, dto.name ?? current.name);
-
-    await this.repo.update(id, patch as QueryDeepPartialEntity<T>);
+    try {
+      await this.repo.update(id, patch as QueryDeepPartialEntity<T>);
+    } catch (error) {
+      this.rethrowConflict(error);
+    }
     return this.findOne(id);
   }
 
@@ -68,6 +84,13 @@ export abstract class ReferenceService<T extends ReferenceRow> {
       ...dto,
       translations: { ...given, [DEFAULT_LOCALE]: name },
     };
+  }
+
+  private rethrowConflict(error: unknown): never {
+    if (isUniqueViolation(error)) {
+      throw new ConflictException(`${this.label} already exists`);
+    }
+    throw error;
   }
 
   private async assertNameFree(name: string, exceptId?: number): Promise<void> {
