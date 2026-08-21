@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
+import { exchangeRateFields } from './dto/exchange-rate.dto';
 import { ExchangeRate, RateSource } from './entities/exchange-rate.entity';
 
 @Injectable()
@@ -15,7 +17,8 @@ export class ExchangeRatesService {
   ) {}
 
   findAll(limit = 90): Promise<ExchangeRate[]> {
-    return this.repo.find({ order: { date: 'DESC' }, take: limit });
+    const take = Math.min(Math.max(limit, 1), 365);
+    return this.repo.find({ order: { date: 'DESC' }, take });
   }
 
   async findOne(id: number): Promise<ExchangeRate> {
@@ -27,6 +30,9 @@ export class ExchangeRatesService {
   }
 
   async findEffective(date: string): Promise<ExchangeRate> {
+    if (!exchangeRateFields.date.safeParse(date).success) {
+      throw new BadRequestException('date must be a calendar date, YYYY-MM-DD');
+    }
     const row = await this.repo.findOne({
       where: { date: LessThanOrEqual(date) },
       order: { date: 'DESC' },
