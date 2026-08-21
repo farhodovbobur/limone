@@ -21,8 +21,10 @@ const latinName = (max: number) => z
 export const catalogFields = {
   translations,
   categoryName: latinName(100),
+  brandName: latinName(100),
   productName: latinName(150),
   productCode: latinName(30),
+  logo: z.string().trim().min(1).max(255),
   notes: z.string().trim().max(2000),
   sku: latinName(60),
   barcode: latinName(32),

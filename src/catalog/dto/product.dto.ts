@@ -7,6 +7,7 @@ export const createProductSchema = z.object({
   translations: catalogFields.translations.optional(),
   code: catalogFields.productCode.nullish(),
   categoryId: catalogFields.id.nullish(),
+  brandId: catalogFields.id.nullish(),
   notes: catalogFields.notes.nullish(),
   isActive: catalogFields.isActive.optional(),
 })

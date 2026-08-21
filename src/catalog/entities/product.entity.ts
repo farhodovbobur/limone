@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import type { Translations } from '../../shared/i18n/locales';
+import { Brand } from './brand.entity';
 import { ProductCategory } from './product-category.entity';
 
 @Entity('products')
@@ -36,6 +37,14 @@ export class Product {
   @ManyToOne(() => ProductCategory, { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'category_id' })
   category!: ProductCategory | null;
+
+  @Index()
+  @Column({ name: 'brand_id', type: 'int', nullable: true })
+  brandId!: number | null;
+
+  @ManyToOne(() => Brand, { onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'brand_id' })
+  brand!: Brand | null;
 
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
