@@ -9,11 +9,26 @@ const translations = z.object({
 })
   .strict();
 
+const NO_CYRILLIC = /^[^\u0400-\u04FF]*$/;
+
+const latinName = (max: number) => z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+    .regex(NO_CYRILLIC, 'Must be Latin script — check the keyboard layout');
+
 export const catalogFields = {
   translations,
-  categoryName: z.string().trim().min(1).max(100),
-  sizeName: z.string().trim().min(1).max(20),
-  colorName: z.string().trim().min(1).max(50),
+  categoryName: latinName(100),
+  productName: latinName(150),
+  productCode: latinName(30),
+  notes: z.string().trim().max(2000),
+  sku: latinName(60),
+  minStock: z.number().int().min(0).max(1_000_000),
+  id: z.number().int().positive(),
+  sizeName: latinName(20),
+  colorName: latinName(50),
   sortOrder: z.number().int().min(0).max(9999),
   hex: z
     .string()
