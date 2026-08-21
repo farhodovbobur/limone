@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { ExecutionContext, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZodValidationPipe } from 'nestjs-zod';
 import request from 'supertest';
@@ -7,6 +7,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../src/shared/guards/roles.guard';
+import { internalCode } from '../src/catalog/barcode';
 
 /**
  * Products and variants against a real PostgreSQL: SKU generation, the two
@@ -17,7 +18,16 @@ import { RolesGuard } from '../src/shared/guards/roles.guard';
  * delete by that prefix — so a crashed run cannot poison the next one.
  */
 
-const allow = { canActivate: () => true };
+// Auth is stubbed, but variant creation writes barcodes with a real
+// created_by FK — so the stub must still put a user on the request.
+const auth = { userId: 0 };
+const allow = {
+  canActivate: (ctx: ExecutionContext) => {
+    const req = ctx.switchToHttp().getRequest<{ user?: unknown }>();
+    req.user = { sub: auth.userId };
+    return true;
+  },
+};
 
 type IdRow = { id: number };
 type ProductBody = IdRow & {
@@ -32,7 +42,6 @@ type VariantBody = IdRow & {
   color2Id: number | null;
   updatedAt: string;
 };
-type MatrixBody = { created: number; skipped: number };
 
 describe('Catalog (e2e)', () => {
   let app: INestApplication<App>;
@@ -61,6 +70,17 @@ describe('Catalog (e2e)', () => {
     app.useGlobalPipes(new ZodValidationPipe());
     await app.init();
     http = app.getHttpServer();
+
+    // A user of our own for created_by — inactive and unloggable, removed in
+    // afterAll. Keeps the suite independent of whether the seeder has run.
+    const users: { id: number }[] = await app.get(DataSource).query(
+      `INSERT INTO users (username, first_name, password_hash, role_id, is_active)
+         VALUES ('e2e-bot', 'E2E', 'not-a-login',
+                 (SELECT id FROM roles WHERE name = 'superadmin'), false)
+         ON CONFLICT (username) DO UPDATE SET first_name = EXCLUDED.first_name
+         RETURNING id`,
+    );
+    auth.userId = users[0].id;
 
     await clean();
 
@@ -92,6 +112,9 @@ describe('Catalog (e2e)', () => {
 
   afterAll(async () => {
     await clean();
+    await app
+      .get(DataSource)
+      .query(`DELETE FROM users WHERE username = 'e2e-bot'`);
     await app.close();
   });
 
@@ -107,6 +130,13 @@ describe('Catalog (e2e)', () => {
 
   async function clean() {
     const ds = app.get(DataSource);
+    await ds.query(
+      `DELETE FROM product_barcodes
+        WHERE variant_id IN (
+          SELECT v.id FROM product_variants v
+          JOIN products p ON p.id = v.product_id
+          WHERE p.name LIKE 'E2E%')`,
+    );
     await ds.query(
       `DELETE FROM product_variants
         WHERE product_id IN (SELECT id FROM products WHERE name LIKE 'E2E%')`,
@@ -186,60 +216,96 @@ describe('Catalog (e2e)', () => {
   });
 
   describe('variants', () => {
-    it('generates the SKU from code + size + colour', async () => {
+    type CreateBody = {
+      created: number;
+      skipped: number;
+      variants: VariantBody[];
+    };
+
+    it('creates a single variant through the same endpoint — a 1 × 1 matrix', async () => {
       const res = await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: sizeS, colorId: qora })
+        .send({ productId, sizeIds: [sizeS], colors: [{ colorId: qora }] })
         .expect(201);
 
-      expect((res.body as VariantBody).sku).toBe('E2E01-E2S-E2EQORA');
+      const body = res.body as CreateBody;
+      expect(body).toMatchObject({ created: 1, skipped: 0 });
+      expect(body.variants[0].sku).toBe('E2E01-E2S-E2EQORA');
     });
 
-    it('rejects the same solid combination again — NULLS NOT DISTINCT via partial index', async () => {
-      await request(http)
+    it('skips the same combination on a re-send instead of duplicating it', async () => {
+      const res = await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: sizeS, colorId: qora })
-        .expect(409);
+        .send({ productId, sizeIds: [sizeS], colors: [{ colorId: qora }] })
+        .expect(201);
+
+      expect(res.body as CreateBody).toMatchObject({ created: 0, skipped: 1 });
+    });
+
+    it('the database itself refuses a duplicate solid combination (partial unique index)', async () => {
+      await expect(
+        app.get(DataSource).query(
+          `INSERT INTO product_variants (product_id, size_id, color_id, sku)
+             VALUES ($1, $2, $3, 'E2E-DUP')`,
+          [productId, sizeS, qora],
+        ),
+      ).rejects.toThrow(/UQ_variant_one_colour/);
     });
 
     it('appends the second colour to the SKU', async () => {
       const res = await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: sizeS, colorId: qora, color2Id: oq })
+        .send({
+          productId,
+          sizeIds: [sizeS],
+          colors: [{ colorId: qora, color2Id: oq }],
+        })
         .expect(201);
 
-      expect((res.body as VariantBody).sku).toBe('E2E01-E2S-E2EQORA-E2EOQ');
+      expect((res.body as CreateBody).variants[0].sku).toBe(
+        'E2E01-E2S-E2EQORA-E2EOQ',
+      );
     });
 
     it('treats the reversed pair as a different garment (D17)', async () => {
       const res = await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: sizeS, colorId: oq, color2Id: qora })
+        .send({
+          productId,
+          sizeIds: [sizeS],
+          colors: [{ colorId: oq, color2Id: qora }],
+        })
         .expect(201);
 
-      expect((res.body as VariantBody).sku).toBe('E2E01-E2S-E2EOQ-E2EQORA');
+      expect((res.body as CreateBody).variants[0].sku).toBe(
+        'E2E01-E2S-E2EOQ-E2EQORA',
+      );
     });
 
     it('rejects two identical colours with 400', async () => {
       await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: sizeM, colorId: qora, color2Id: qora })
+        .send({
+          productId,
+          sizeIds: [sizeM],
+          colors: [{ colorId: qora, color2Id: qora }],
+        })
         .expect(400);
     });
 
     it('names the missing reference in a 404', async () => {
       const res = await request(http)
         .post('/api/product-variants')
-        .send({ productId, sizeId: 999999, colorId: qora })
+        .send({ productId, sizeIds: [999999], colors: [{ colorId: qora }] })
         .expect(404);
 
       expect((res.body as { message: string }).message).toContain('999999');
     });
 
-    it('matrix creates the missing combinations and skips the existing one', async () => {
+    it('a full matrix creates the missing combinations and skips the existing one', async () => {
       // (S, qora) already exists as a solid; the other three are new.
       const res = await request(http)
-        .post('/api/product-variants/matrix')
+        .post('/api/product-variants')
         .send({
           productId,
           sizeIds: [sizeS, sizeM],
@@ -247,12 +313,12 @@ describe('Catalog (e2e)', () => {
         })
         .expect(201);
 
-      expect(res.body as MatrixBody).toMatchObject({ created: 3, skipped: 1 });
+      expect(res.body as CreateBody).toMatchObject({ created: 3, skipped: 1 });
     });
 
-    it('matrix re-run is a clean no-op', async () => {
+    it('re-sending the matrix is a clean no-op', async () => {
       const res = await request(http)
-        .post('/api/product-variants/matrix')
+        .post('/api/product-variants')
         .send({
           productId,
           sizeIds: [sizeS, sizeM],
@@ -260,12 +326,12 @@ describe('Catalog (e2e)', () => {
         })
         .expect(201);
 
-      expect(res.body as MatrixBody).toMatchObject({ created: 0, skipped: 4 });
+      expect(res.body as CreateBody).toMatchObject({ created: 0, skipped: 4 });
     });
 
     it('duplicates inside one payload are skipped, not a 500', async () => {
       const res = await request(http)
-        .post('/api/product-variants/matrix')
+        .post('/api/product-variants')
         .send({
           productId,
           sizeIds: [sizeM, sizeM],
@@ -273,7 +339,14 @@ describe('Catalog (e2e)', () => {
         })
         .expect(201);
 
-      expect(res.body as MatrixBody).toMatchObject({ created: 1, skipped: 1 });
+      expect(res.body as CreateBody).toMatchObject({ created: 1, skipped: 1 });
+    });
+
+    it('the old /matrix route is gone', async () => {
+      await request(http)
+        .post('/api/product-variants/matrix')
+        .send({ productId, sizeIds: [sizeM], colors: [{ colorId: kok }] })
+        .expect(404);
     });
 
     it('colour filter matches BOTH slots — solid and two-tone garments', async () => {
@@ -319,6 +392,195 @@ describe('Catalog (e2e)', () => {
         .patch(`/api/product-variants/${a.id}`)
         .send({ sku: b.sku })
         .expect(409);
+    });
+  });
+
+  describe('barcodes', () => {
+    type BarcodeRow = { id: number; code: string; type: string };
+
+    async function firstVariant(): Promise<VariantBody> {
+      const list = await request(http)
+        .get(`/api/product-variants?productId=${productId}`)
+        .expect(200);
+      return (list.body as VariantBody[])[0];
+    }
+
+    it('every variant was born with exactly one INTERNAL code, matrix included', async () => {
+      const counts: { variants: string; internals: string }[] = await app
+        .get(DataSource)
+        .query(
+          `SELECT
+              (SELECT count(*) FROM product_variants WHERE product_id = $1) AS variants,
+              (SELECT count(*) FROM product_barcodes b
+                JOIN product_variants v ON v.id = b.variant_id
+                WHERE v.product_id = $1 AND b.type = 'INTERNAL') AS internals`,
+          [productId],
+        );
+
+      expect(counts[0].internals).toBe(counts[0].variants);
+      expect(Number(counts[0].variants)).toBeGreaterThan(0);
+    });
+
+    it('the INTERNAL code is the documented shape: 7 id digits + check', async () => {
+      const variant = await firstVariant();
+      const res = await request(http)
+        .get(`/api/product-barcodes?variantId=${variant.id}`)
+        .expect(200);
+
+      const internal = (res.body as BarcodeRow[]).find(
+        (b) => b.type === 'INTERNAL',
+      );
+      expect(internal?.code).toBe(internalCode(variant.id));
+    });
+
+    it('by-code resolves the internal code to its variant', async () => {
+      const variant = await firstVariant();
+      const res = await request(http)
+        .get(`/api/product-variants/by-code?code=${internalCode(variant.id)}`)
+        .expect(200);
+
+      expect((res.body as VariantBody).id).toBe(variant.id);
+    });
+
+    it('by-code 400s our shape with a broken check digit', async () => {
+      const variant = await firstVariant();
+      const good = internalCode(variant.id);
+      const bad = good.slice(0, 7) + String((Number(good.at(-1)) + 1) % 10);
+
+      await request(http)
+        .get(`/api/product-variants/by-code?code=${bad}`)
+        .expect(400);
+    });
+
+    it('by-code 404s an unknown code — the learn flow entrance', async () => {
+      await request(http)
+        .get('/api/product-variants/by-code?code=9990001112223')
+        .expect(404);
+    });
+
+    it('learns a supplier code and resolves it case-insensitively', async () => {
+      const variant = await firstVariant();
+      await request(http)
+        .post('/api/product-barcodes')
+        .send({
+          variantId: variant.id,
+          code: 'abc-123',
+          type: 'SUPPLIER',
+          note: 'E2E supplier',
+        })
+        .expect(201);
+
+      const res = await request(http)
+        .get('/api/product-variants/by-code')
+        .query({ code: '  abc-123 ' })
+        .expect(200);
+
+      expect((res.body as VariantBody).id).toBe(variant.id);
+    });
+
+    it('refuses the same code on a second variant, naming the holder', async () => {
+      const list = await request(http)
+        .get(`/api/product-variants?productId=${productId}`)
+        .expect(200);
+      const second = (list.body as VariantBody[])[1];
+
+      const res = await request(http)
+        .post('/api/product-barcodes')
+        .send({ variantId: second.id, code: 'ABC-123', type: 'SUPPLIER' })
+        .expect(409);
+
+      expect((res.body as { message: string }).message).toContain('E2E01');
+    });
+
+    it('validates an EAN13 row: bad check digit 400, real one 201', async () => {
+      const variant = await firstVariant();
+
+      await request(http)
+        .post('/api/product-barcodes')
+        .send({ variantId: variant.id, code: '4006381333930', type: 'EAN13' })
+        .expect(400);
+
+      await request(http)
+        .post('/api/product-barcodes')
+        .send({ variantId: variant.id, code: '4006381333931', type: 'EAN13' })
+        .expect(201);
+    });
+
+    it('refuses to learn a code in our own internal shape', async () => {
+      const variant = await firstVariant();
+
+      await request(http)
+        .post('/api/product-barcodes')
+        .send({ variantId: variant.id, code: '99999995', type: 'SUPPLIER' })
+        .expect(400);
+    });
+
+    it('by-code 400s a repeated query key instead of crashing', async () => {
+      await request(http)
+        .get('/api/product-variants/by-code?code=00000413&code=x')
+        .expect(400);
+    });
+
+    it('never accepts INTERNAL from a client', async () => {
+      const variant = await firstVariant();
+
+      await request(http)
+        .post('/api/product-barcodes')
+        .send({ variantId: variant.id, code: '00000010', type: 'INTERNAL' })
+        .expect(400);
+    });
+
+    it('deletes a supplier code — and the scan forgets it', async () => {
+      const variant = await firstVariant();
+      const rows = await request(http)
+        .get(`/api/product-barcodes?variantId=${variant.id}`)
+        .expect(200);
+      const supplier = (rows.body as BarcodeRow[]).find(
+        (b) => b.code === 'ABC-123',
+      );
+
+      await request(http)
+        .delete(`/api/product-barcodes/${supplier!.id}`)
+        .expect(204);
+      await request(http)
+        .get('/api/product-variants/by-code?code=ABC-123')
+        .expect(404);
+    });
+
+    it('refuses to delete an INTERNAL code', async () => {
+      const variant = await firstVariant();
+      const rows = await request(http)
+        .get(`/api/product-barcodes?variantId=${variant.id}`)
+        .expect(200);
+      const internal = (rows.body as BarcodeRow[]).find(
+        (b) => b.type === 'INTERNAL',
+      );
+
+      await request(http)
+        .delete(`/api/product-barcodes/${internal!.id}`)
+        .expect(400);
+    });
+
+    it('the database itself refuses a second INTERNAL code per variant', async () => {
+      const variant = await firstVariant();
+
+      await expect(
+        app.get(DataSource).query(
+          `INSERT INTO product_barcodes (variant_id, code, type, created_by)
+            VALUES ($1, '99999995', 'INTERNAL', $2)`,
+          [variant.id, auth.userId],
+        ),
+      ).rejects.toThrow(/UQ_barcode_internal_per_variant/);
+    });
+
+    it('the FK refuses to delete a variant that has codes in the wild', async () => {
+      const variant = await firstVariant();
+
+      await expect(
+        app
+          .get(DataSource)
+          .query(`DELETE FROM product_variants WHERE id = $1`, [variant.id]),
+      ).rejects.toThrow(/foreign key constraint/);
     });
   });
 });
