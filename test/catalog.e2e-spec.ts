@@ -34,6 +34,8 @@ type ProductBody = IdRow & {
   name: string;
   translations: Record<string, string>;
   categoryId: number | null;
+  brandId: number | null;
+  brand?: { id: number; name: string } | null;
   updatedAt: string;
 };
 type VariantBody = IdRow & {
@@ -48,6 +50,7 @@ describe('Catalog (e2e)', () => {
   let http: App;
 
   let categoryId: number;
+  let brandId: number;
   let sizeS: number;
   let sizeM: number;
   let qora: number;
@@ -87,6 +90,9 @@ describe('Catalog (e2e)', () => {
     // Reference rows this file owns, created through the real API.
     categoryId = await post<IdRow>('/api/product-categories', {
       name: 'E2E Category',
+    }).then((r) => r.id);
+    brandId = await post<IdRow>('/api/brands', {
+      name: 'E2E Brand',
     }).then((r) => r.id);
     sizeS = await post<IdRow>('/api/sizes', {
       name: 'E2S',
@@ -145,7 +151,32 @@ describe('Catalog (e2e)', () => {
     await ds.query(`DELETE FROM sizes WHERE name IN ('E2S', 'E2M')`);
     await ds.query(`DELETE FROM colors WHERE name LIKE 'E2E %'`);
     await ds.query(`DELETE FROM product_categories WHERE name LIKE 'E2E %'`);
+    await ds.query(`DELETE FROM brands WHERE name LIKE 'E2E %'`);
   }
+
+  describe('brands', () => {
+    it('refuses translations — a brand name reads the same in every locale (D18)', async () => {
+      await request(http)
+        .post('/api/brands')
+        .send({ name: 'E2E Zara', translations: { ru: 'Зара' } })
+        .expect(400);
+    });
+
+    it('takes a logo and lets it go — optional in both directions', async () => {
+      const brand = await post<IdRow & { logo: string | null }>('/api/brands', {
+        name: 'E2E Puma',
+        logo: 'brands/puma.png',
+      });
+      expect(brand.logo).toBe('brands/puma.png');
+
+      const res = await request(http)
+        .patch(`/api/brands/${brand.id}`)
+        .send({ logo: null })
+        .expect(200);
+
+      expect((res.body as { logo: string | null }).logo).toBeNull();
+    });
+  });
 
   describe('products', () => {
     it('creates one and defaults translations.uz to the name', async () => {
@@ -212,6 +243,46 @@ describe('Catalog (e2e)', () => {
 
       const names = (res.body as ProductBody[]).map((p) => p.name);
       expect(names).toContain('E2E Koylak');
+    });
+
+    it('carries a brand, joins its name, and filters by it', async () => {
+      const created = await post<ProductBody>('/api/products', {
+        name: 'E2E Adidas Koylak',
+        brandId,
+      });
+      expect(created.brandId).toBe(brandId);
+
+      const res = await request(http)
+        .get(`/api/products?brandId=${brandId}`)
+        .expect(200);
+
+      const rows = res.body as ProductBody[];
+      const names = rows.map((p) => p.name);
+      expect(names).toContain('E2E Adidas Koylak');
+      // The brandless product must drop out, or the filter is decorative.
+      expect(names).not.toContain('E2E Koylak');
+      expect(rows[0].brand?.name).toBe('E2E Brand');
+    });
+
+    it('404s a nonexistent brand instead of leaking the FK error', async () => {
+      await request(http)
+        .post('/api/products')
+        .send({ name: 'E2E Nike Koylak', brandId: 999999 })
+        .expect(404);
+    });
+
+    it('clears the brand on PATCH — own production carries no label', async () => {
+      const product = await post<ProductBody>('/api/products', {
+        name: 'E2E Own Koylak',
+        brandId,
+      });
+
+      const res = await request(http)
+        .patch(`/api/products/${product.id}`)
+        .send({ brandId: null })
+        .expect(200);
+
+      expect((res.body as ProductBody).brandId).toBeNull();
     });
   });
 

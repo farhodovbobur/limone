@@ -26,6 +26,12 @@ describe('catalogFields — Latin-only names', () => {
     }
   });
 
+  it('holds brand names to the same rule, though they never reach a SKU', () => {
+    expect(catalogFields.brandName.safeParse('Adidas').success).toBe(true);
+    // "Adidas" typed with the RU layout still active
+    expect(catalogFields.brandName.safeParse('Фвшвфы').success).toBe(false);
+  });
+
   it('leaves translations free — ru is Cyrillic by design', () => {
     expect(catalogFields.translations.safeParse({ ru: 'Чёрный' }).success).toBe(
       true,
