@@ -1,4 +1,8 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { FindOneOptions, LessThanOrEqual, Repository } from 'typeorm';
 import { ExchangeRate, RateSource } from './entities/exchange-rate.entity';
 import { ExchangeRatesService } from './exchange-rates.service';
@@ -41,7 +45,35 @@ const row = (date: string, rate = '12650.00'): ExchangeRate =>
   ({ id: 1, date, rate, source: RateSource.MANUAL }) as ExchangeRate;
 
 describe('ExchangeRatesService', () => {
+  describe('findAll', () => {
+    it.each([
+      ['a negative limit', -5, 1],
+      ['zero', 0, 1],
+      ['an oversized limit', 9_999, 365],
+      ['no argument', undefined, 90],
+    ])('clamps %s to a sane take', async (_label, limit, take) => {
+      const { service, repo } = makeService();
+      repo.find.mockResolvedValue([]);
+
+      await (limit === undefined ? service.findAll() : service.findAll(limit));
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { date: 'DESC' },
+        take,
+      });
+    });
+  });
+
   describe('findEffective', () => {
+    it('rejects a non-date before touching the database', async () => {
+      const { service, repo } = makeService();
+
+      await expect(service.findEffective('banana')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(repo.findOne).not.toHaveBeenCalled();
+    });
+
     it('asks for the latest rate dated on or before the day', async () => {
       const { service, repo } = makeService();
       repo.findOne.mockResolvedValue(row('2026-08-14'));
