@@ -155,7 +155,6 @@ Two consequences worth planning for:
 | `color2_id` FK → `colors` | second colour, `NULL` for a solid garment (D17) |
 | — | **`UNIQUE NULLS NOT DISTINCT (product_id, size_id, color_id, color2_id)`**. `NULLS NOT DISTINCT` (PostgreSQL 15+) is load-bearing, not decoration: under an ordinary `UNIQUE`, two rows with the same first colour and a `NULL` second both insert cleanly, because NULLs never collide — verified against this project's PostgreSQL 18 |
 | `sku` | auto-generated from `products.code` + `sizes.name` + slugified colour names → `KOY01-M-QORA`, or `KOY01-M-QORA-OQ` when two-toned; editable, unique. Built from `name`, never from a translation, so it is language-neutral and unaffected by later translation edits |
-| `min_stock` | low-stock threshold, pieces |
 | `is_active`, timestamps | |
 
 Neither price nor stock lives here. Both are separate concerns with their own history — see 5.2 and 5.3.
@@ -293,8 +292,8 @@ PATCH  /products/:id
 GET    /products/:id                  with variants
 
 GET    /product-variants              list, filter by product/size/color/low-stock
-POST   /product-variants              single, or bulk from a size × color matrix
-PATCH  /product-variants/:id          sku, min_stock, is_active
+POST   /product-variants              one or many: sizes × colour specs, existing skipped
+PATCH  /product-variants/:id          sku, is_active
 GET    /product-variants/:id          stock per grade, averages, ledger page
 
 GET    /product-prices                current list, or as-of a given date
@@ -318,8 +317,8 @@ There is no update and no delete endpoint for movements (D3), and none for price
 ## 9. Frontend screens (`apps/admin`)
 
 1. **Products list** — table: name, code, category, variant count, active. Uses `ResponsiveTable`.
-2. **Product form** — drawer: name, code, category, notes.
-3. **Variant matrix** — pick sizes × colors for a product, generate SKUs in bulk, skipping combinations that already exist.
+2. **Product form** — name, code, category, notes **and** the size × colour matrix, in one form. Saving creates the product and then its variants — two calls, one screen. Variants are never created one at a time through a separate flow: a single variant is simply a 1 × 1 matrix.
+3. **Adding variants later** — the same matrix re-opened on an existing product; combinations that already exist are skipped.
 4. **Price list** — variant table with the current price; a row opens the three-field markup editor (percent · fixed · amount, live-linked). UZS/USD switcher. Shows both **markup** and **margin**, each labelled, because the two are routinely confused (30 % markup on 100 000 is a 23 % margin).
 5. **Price history** — one variant's rows over time, with the cost basis beside each so margin erosion is visible.
 6. **Variant card** — stock per grade, averages, ledger history (paginated).
@@ -349,7 +348,6 @@ Plus a CLI rebuild command (§6) that replays the ledger and reports drift.
 - [ ] Every movement row carries a `cost_source`; opening-balance rows are `MANUAL`.
 - [ ] Completing a stocktake writes ADJUSTMENTs equal to counted − system per (variant, grade), valued at the current average, and locks the stocktake.
 - [ ] `warehouse_product_balances` and `warehouse_product_costs` equal a from-scratch ledger replay — verified by truncating them and rebuilding.
-- [ ] Low-stock list shows exactly the variants with A-grade stock ≤ `min_stock`.
 - [ ] Role matrix enforced: warehouse keeper full access; workshop manager read-only (403 on writes); worker/sales 403 on writes.
 
 ---
@@ -364,6 +362,7 @@ Plus a CLI rebuild command (§6) that replays the ledger and reports drift.
 | 4 | When Phase 3 lands, do manual costs get recomputed from production, or stay as historical estimates? | Phase 3 design (default: stay) |
 | 5 | A third markup kind, `MARGIN` — percentage of *price* rather than cost, which is what "rentabellik" means to an accountant. `base_cost / (1 − v/100)` | when the owner phrases a target as "keep 30 % of the price" rather than "add 30 % to the cost" |
 | 6 | Price rounding step — should 113 750 be nudged to a round 114 000 automatically, or is the human's typed `amount` always final? Currently: always final | after the price form is used on real garments |
+| 8 | **Low-stock threshold.** `min_stock` was dropped from `product_variants` (owner decision 2026-08-20: not needed). The dashboard's low-stock list therefore has no threshold to compare against — a product-level value, a global default, or dropping the list are the options | P2-4, when the dashboard is built |
 | 7 | Does `products` need a translated `description` for the Phase 6 storefront? If yes, `translations` reshapes from `{"ru":"…"}` to `{"ru":{"name":"…","description":"…"}}` — a data migration over a few dozen rows, no `ALTER TABLE` | Phase 6 design |
 | 8 | Bulk re-price ("fabric got more expensive, raise everything") — needs a *current* markup policy per variant or category, since the frozen per-row markup is a past description, not a present intention | when asked for, and after Phase 3 produces real costs |
 
