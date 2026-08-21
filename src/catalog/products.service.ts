@@ -6,9 +6,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, FindOptionsWhere, Not, Repository } from 'typeorm';
 import { DEFAULT_LOCALE, Translations } from '../shared/i18n/locales';
+import { Brand } from './entities/brand.entity';
 import { ProductCategory } from './entities/product-category.entity';
 import { Product } from './entities/product.entity';
 import { rethrowAsConflict } from './reference.service';
+
+export interface ProductFilter {
+  includeInactive?: boolean;
+  categoryId?: number;
+  brandId?: number;
+}
 
 @Injectable()
 export class ProductsService {
@@ -17,20 +24,25 @@ export class ProductsService {
     private readonly repo: Repository<Product>,
     @InjectRepository(ProductCategory)
     private readonly categories: Repository<ProductCategory>,
+    @InjectRepository(Brand)
+    private readonly brands: Repository<Brand>,
   ) {}
 
-  /** `category` is joined because the list column shows its name. */
-  findAll(includeInactive = false, categoryId?: number): Promise<Product[]> {
+  /** `category` and `brand` are joined because the list shows both names. */
+  findAll(filter: ProductFilter = {}): Promise<Product[]> {
     const where: FindOptionsWhere<Product> = {};
-    if (!includeInactive) {
+    if (!filter.includeInactive) {
       where.isActive = true;
     }
-    if (categoryId !== undefined) {
-      where.categoryId = categoryId;
+    if (filter.categoryId !== undefined) {
+      where.categoryId = filter.categoryId;
+    }
+    if (filter.brandId !== undefined) {
+      where.brandId = filter.brandId;
     }
     return this.repo.find({
       where,
-      relations: { category: true },
+      relations: { category: true, brand: true },
       order: { name: 'ASC' },
     });
   }
@@ -48,6 +60,7 @@ export class ProductsService {
     await this.assertNameFree(name);
     await this.assertCodeFree(dto.code);
     await this.requireCategory(dto.categoryId);
+    await this.requireBrand(dto.brandId);
     try {
       return await this.repo.save(this.repo.create(this.defaultUz(dto, name)));
     } catch (error) {
@@ -68,6 +81,9 @@ export class ProductsService {
     }
     if (dto.categoryId !== undefined) {
       await this.requireCategory(dto.categoryId);
+    }
+    if (dto.brandId !== undefined) {
+      await this.requireBrand(dto.brandId);
     }
     const patch =
       dto.translations === undefined
@@ -127,6 +143,18 @@ export class ProductsService {
     }
     if (!(await this.categories.existsBy({ id: categoryId }))) {
       throw new NotFoundException(`Category ${categoryId} not found`);
+    }
+  }
+
+  /** Clearing the brand (`null`) is legitimate — see the entity comment. */
+  private async requireBrand(
+    brandId: number | null | undefined,
+  ): Promise<void> {
+    if (brandId == null) {
+      return;
+    }
+    if (!(await this.brands.existsBy({ id: brandId }))) {
+      throw new NotFoundException(`Brand ${brandId} not found`);
     }
   }
 }

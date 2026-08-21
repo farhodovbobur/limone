@@ -32,8 +32,10 @@ export class ProductsController {
     includeInactive: boolean,
     @Query('categoryId', new ParseIntPipe({ optional: true }))
     categoryId?: number,
+    @Query('brandId', new ParseIntPipe({ optional: true }))
+    brandId?: number,
   ) {
-    return this.service.findAll(includeInactive, categoryId);
+    return this.service.findAll({ includeInactive, categoryId, brandId });
   }
 
   @Get(':id')
