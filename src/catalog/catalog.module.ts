@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ColorsController } from './colors.controller';
 import { ColorsService } from './colors.service';
+import { BrandsController } from './brands.controller';
+import { BrandsService } from './brands.service';
+import { Brand } from './entities/brand.entity';
 import { Color } from './entities/color.entity';
 import { ProductBarcode } from './entities/product-barcode.entity';
 import { ProductCategory } from './entities/product-category.entity';
@@ -23,6 +26,7 @@ import { SizesService } from './sizes.service';
   imports: [
     TypeOrmModule.forFeature([
       ProductCategory,
+      Brand,
       Size,
       Color,
       Product,
@@ -32,6 +36,7 @@ import { SizesService } from './sizes.service';
   ],
   controllers: [
     ProductCategoriesController,
+    BrandsController,
     SizesController,
     ColorsController,
     ProductsController,
@@ -40,6 +45,7 @@ import { SizesService } from './sizes.service';
   ],
   providers: [
     ProductCategoriesService,
+    BrandsService,
     SizesService,
     ColorsService,
     ProductsService,
@@ -48,6 +54,7 @@ import { SizesService } from './sizes.service';
   ],
   exports: [
     ProductCategoriesService,
+    BrandsService,
     SizesService,
     ColorsService,
     ProductsService,
