@@ -62,6 +62,7 @@ Every later phase reads from what this phase creates — production (Phase 3) wr
 | D15 | The price list holds **list prices only**. Discounts, negotiated prices and clearance sales are properties of an order line, not of a garment | owner decision 2026-08-17 |
 | D17 | A garment carries **one or two colours**, never more. The pair lives on the variant as `color_id` + `color2_id` (nullable), **not** as a combination row in `colors`. The names are ordinal, not hierarchical: the swatch is a full circle for one colour and an even 50/50 split for two, so neither colour is ever subordinate and no column may imply otherwise. Order still matters — it decides which half of the circle a colour takes, and `(black, white)` is therefore a different variant from `(white, black)`. This also makes "show me everything containing black" a plain `color_id = X OR color2_id = X`; a combination row would have hidden the black inside an opaque "Qora-Oq" entry | owner decision 2026-08-17 |
 | D16 | Reference names are multilingual from day one. **`name`** is the unique key and the source the SKU is built from; **`translations jsonb`** holds every display name — **`uz` included**. The duplication of one short string is deliberate: it keeps all locales symmetric, so there is one sort expression, one form and no special case in any render path. `ReferenceService` defaults `translations.uz` to `name` on write, and the two may diverge afterwards because they do different jobs. A fourth language costs no migration | owner decision 2026-08-17 |
+| D18 | **Brand is a reference table** (`brands`), not a text column, and `products.brand_id` is **nullable**. The workshop both sews its own garments and resells bought-in finished goods, so brand is a filter and a report dimension — and free text fragments into "Adidas" / "adidas" / "Addidas" within a week, which no filter can merge afterwards (D7, the same reasoning as sizes and colours). Nullable because own production is the default case: `NOT NULL` would force a placeholder row onto every garment we make ourselves. Brand does **not** feed the SKU — it would lengthen every code with a fact `product_id` already carries. It also carries **no `translations`**, which puts it outside `ReferenceService`: `BrandsService` is standalone, the same shape as `ProductsService` | owner decision 2026-08-21 |
 
 ### Design review — 2026-08-17
 
@@ -106,9 +107,11 @@ Quantities are whole pieces: `integer`. Money follows §4.7.
 
 ### 5.1 Catalog — what exists
 
-All three reference tables share one shape: `name` + `translations` (D16).
+Three of the four reference tables share one shape: `name` + `translations` (D16). `brands` is the exception — see below.
 
 **`product_categories`** — light grouping (ko'ylak, shim, kurtka…): `id`, `name`, `translations`, `is_active`. *Written.*
+
+**`brands`** — who made the garment ("Adidas", "Zara"): `id`, `name`, `logo` (optional storage key — the file lives on disk, not in the row), `is_active`. **No `translations`**: a brand name is a proper noun and is written the same in every locale, so the column would hold a copy of `name` in three places and nothing else (D18). `products.brand_id` stays `NULL` for own production and is filled for bought-in goods. *Written.*
 
 **`sizes`** — `id`, `name` ("S", "M", "46"), `translations`, `sort_order`, `is_active`. Ordered because "S, M, L, XL" must not sort alphabetically. `translations` is usually empty here — sizes are language-neutral — and that emptiness is cheaper than making `sizes` the one table every render path has to special-case. *Written.*
 
@@ -143,6 +146,7 @@ Two consequences worth planning for:
 | `id`, `name`, `translations` | "Ko'ylak-01" + RU/EN (D16) |
 | `code` (unique, optional) | article number, e.g. `KOY01` — feeds the SKU |
 | `category_id` FK | |
+| `brand_id` FK (optional) | who made it — `NULL` for own production (D18) |
 | `notes` | |
 | `is_active`, timestamps | deactivate, never delete |
 
@@ -281,12 +285,13 @@ This is the honest form of "we counted what was in the room on day one". When Ph
 
 ```
 GET    /product-categories            CRUD (admin)          ← written
+GET    /brands                        CRUD (admin)          ← written
 GET    /sizes                         CRUD (admin)          ← written
 GET    /colors                        CRUD (admin)          ← written
 GET    /exchange-rates                list / by date
 POST   /exchange-rates                manual entry (CBU fetch: open question)
 
-GET    /products                      list, filter by category/active
+GET    /products                      list, filter by category/brand/active
 POST   /products
 PATCH  /products/:id
 GET    /products/:id                  with variants
@@ -316,8 +321,8 @@ There is no update and no delete endpoint for movements (D3), and none for price
 
 ## 9. Frontend screens (`apps/admin`)
 
-1. **Products list** — table: name, code, category, variant count, active. Uses `ResponsiveTable`.
-2. **Product form** — name, code, category, notes **and** the size × colour matrix, in one form. Saving creates the product and then its variants — two calls, one screen. Variants are never created one at a time through a separate flow: a single variant is simply a 1 × 1 matrix.
+1. **Products list** — table: name, code, category, brand, variant count, active. Uses `ResponsiveTable`.
+2. **Product form** — name, code, category, brand, notes **and** the size × colour matrix, in one form. Saving creates the product and then its variants — two calls, one screen. Variants are never created one at a time through a separate flow: a single variant is simply a 1 × 1 matrix.
 3. **Adding variants later** — the same matrix re-opened on an existing product; combinations that already exist are skipped.
 4. **Price list** — variant table with the current price; a row opens the three-field markup editor (percent · fixed · amount, live-linked). UZS/USD switcher. Shows both **markup** and **margin**, each labelled, because the two are routinely confused (30 % markup on 100 000 is a 23 % margin).
 5. **Price history** — one variant's rows over time, with the cost basis beside each so margin erosion is visible.
@@ -325,7 +330,7 @@ There is no update and no delete endpoint for movements (D3), and none for price
 7. **Opening balance** — multi-line form: variant, grade, qty, unit cost.
 8. **Issue (OUT)** — multi-line, shows available stock per grade inline.
 9. **Stocktake flow** — start → fill counted → review differences → complete.
-10. **Reference CRUD** — categories, sizes, colors, exchange rates.
+10. **Reference CRUD** — categories, brands, sizes, colors, exchange rates.
 11. **Warehouse dashboard** — total pieces, stock value, low-stock list, recent movements.
 
 Plus a CLI rebuild command (§6) that replays the ledger and reports drift.
@@ -362,9 +367,9 @@ Plus a CLI rebuild command (§6) that replays the ledger and reports drift.
 | 4 | When Phase 3 lands, do manual costs get recomputed from production, or stay as historical estimates? | Phase 3 design (default: stay) |
 | 5 | A third markup kind, `MARGIN` — percentage of *price* rather than cost, which is what "rentabellik" means to an accountant. `base_cost / (1 − v/100)` | when the owner phrases a target as "keep 30 % of the price" rather than "add 30 % to the cost" |
 | 6 | Price rounding step — should 113 750 be nudged to a round 114 000 automatically, or is the human's typed `amount` always final? Currently: always final | after the price form is used on real garments |
-| 8 | **Low-stock threshold.** `min_stock` was dropped from `product_variants` (owner decision 2026-08-20: not needed). The dashboard's low-stock list therefore has no threshold to compare against — a product-level value, a global default, or dropping the list are the options | P2-4, when the dashboard is built |
 | 7 | Does `products` need a translated `description` for the Phase 6 storefront? If yes, `translations` reshapes from `{"ru":"…"}` to `{"ru":{"name":"…","description":"…"}}` — a data migration over a few dozen rows, no `ALTER TABLE` | Phase 6 design |
 | 8 | Bulk re-price ("fabric got more expensive, raise everything") — needs a *current* markup policy per variant or category, since the frozen per-row markup is a past description, not a present intention | when asked for, and after Phase 3 produces real costs |
+| 9 | **Low-stock threshold.** `min_stock` was dropped from `product_variants` (owner decision 2026-08-20: not needed). The dashboard's low-stock list therefore has no threshold to compare against — a product-level value, a global default, or dropping the list are the options | P2-4, when the dashboard is built |
 
 ---
 
