@@ -23,6 +23,18 @@ export const isUniqueViolation = (error: unknown): boolean =>
   error instanceof QueryFailedError &&
   (error.driverError as { code?: string }).code === '23505';
 
+export const violatedTable = (error: unknown): string | undefined =>
+  error instanceof QueryFailedError
+    ? (error.driverError as { table?: string }).table
+    : undefined;
+
+export function rethrowAsConflict(error: unknown, message: string): never {
+  if (isUniqueViolation(error)) {
+    throw new ConflictException(message);
+  }
+  throw error;
+}
+
 export abstract class ReferenceService<T extends ReferenceRow> {
   protected constructor(
     protected readonly repo: Repository<T>,
@@ -51,7 +63,7 @@ export abstract class ReferenceService<T extends ReferenceRow> {
     try {
       return await this.repo.save(this.repo.create(this.defaultUz(dto, name)));
     } catch (error) {
-      this.rethrowConflict(error);
+      rethrowAsConflict(error, `${this.label} already exists`);
     }
   }
 
@@ -70,7 +82,7 @@ export abstract class ReferenceService<T extends ReferenceRow> {
     try {
       await this.repo.update(id, patch as QueryDeepPartialEntity<T>);
     } catch (error) {
-      this.rethrowConflict(error);
+      rethrowAsConflict(error, `${this.label} already exists`);
     }
     return this.findOne(id);
   }
@@ -84,13 +96,6 @@ export abstract class ReferenceService<T extends ReferenceRow> {
       ...dto,
       translations: { ...given, [DEFAULT_LOCALE]: name },
     };
-  }
-
-  private rethrowConflict(error: unknown): never {
-    if (isUniqueViolation(error)) {
-      throw new ConflictException(`${this.label} already exists`);
-    }
-    throw error;
   }
 
   private async assertNameFree(name: string, exceptId?: number): Promise<void> {

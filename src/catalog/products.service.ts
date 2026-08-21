@@ -8,7 +8,7 @@ import { DeepPartial, FindOptionsWhere, Not, Repository } from 'typeorm';
 import { DEFAULT_LOCALE, Translations } from '../shared/i18n/locales';
 import { ProductCategory } from './entities/product-category.entity';
 import { Product } from './entities/product.entity';
-import { isUniqueViolation } from './reference.service';
+import { rethrowAsConflict } from './reference.service';
 
 @Injectable()
 export class ProductsService {
@@ -51,7 +51,7 @@ export class ProductsService {
     try {
       return await this.repo.save(this.repo.create(this.defaultUz(dto, name)));
     } catch (error) {
-      this.rethrowConflict(error);
+      rethrowAsConflict(error, 'Product name or code already in use');
     }
   }
 
@@ -76,7 +76,7 @@ export class ProductsService {
     try {
       await this.repo.update(id, patch);
     } catch (error) {
-      this.rethrowConflict(error);
+      rethrowAsConflict(error, 'Product name or code already in use');
     }
     return this.findOne(id);
   }
@@ -128,12 +128,5 @@ export class ProductsService {
     if (!(await this.categories.existsBy({ id: categoryId }))) {
       throw new NotFoundException(`Category ${categoryId} not found`);
     }
-  }
-
-  private rethrowConflict(error: unknown): never {
-    if (isUniqueViolation(error)) {
-      throw new ConflictException('Product name or code already in use');
-    }
-    throw error;
   }
 }
