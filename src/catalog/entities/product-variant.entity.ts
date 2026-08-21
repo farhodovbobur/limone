@@ -61,9 +61,6 @@ export class ProductVariant {
   @Column({ type: 'varchar', length: 60, unique: true })
   sku!: string;
 
-  @Column({ name: 'min_stock', type: 'int', default: 0 })
-  minStock!: number;
-
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 

@@ -26,7 +26,6 @@ export const catalogFields = {
   notes: z.string().trim().max(2000),
   sku: latinName(60),
   barcode: latinName(32),
-  minStock: z.number().int().min(0).max(1_000_000),
   id: z.number().int().positive(),
   sizeName: latinName(20),
   colorName: latinName(50),

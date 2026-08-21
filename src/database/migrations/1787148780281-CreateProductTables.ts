@@ -29,7 +29,6 @@ export class CreateProductTables1787148780281 implements MigrationInterface {
           "color_id" integer NOT NULL,
           "color2_id" integer,
           "sku" character varying(60) NOT NULL,
-          "min_stock" integer NOT NULL DEFAULT '0',
           "is_active" boolean NOT NULL DEFAULT true,
           "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
           "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -120,12 +119,22 @@ export class CreateProductTables1787148780281 implements MigrationInterface {
     );
     await queryRunner.query(`DROP INDEX "public"."UQ_variant_two_colours"`);
     await queryRunner.query(`DROP INDEX "public"."UQ_variant_one_colour"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_2cf76df76ada8b14e4ae682783"`,);
-    await queryRunner.query(`DROP INDEX "public"."IDX_8b91b27dcad5b2bdb13977a176"`,);
-    await queryRunner.query(`DROP INDEX "public"."IDX_bf3e96b7fc720a0ea3a8195337"`,);
-    await queryRunner.query(`DROP INDEX "public"."IDX_6343513e20e2deab45edfce131"`,);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_2cf76df76ada8b14e4ae682783"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_8b91b27dcad5b2bdb13977a176"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_bf3e96b7fc720a0ea3a8195337"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_6343513e20e2deab45edfce131"`,
+    );
     await queryRunner.query(`DROP TABLE "product_variants"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_9a5f6868c96e0069e699f33e12"`,);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_9a5f6868c96e0069e699f33e12"`,
+    );
     await queryRunner.query(`DROP TABLE "products"`);
   }
 }
