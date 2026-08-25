@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { rethrowAsConflict } from '../shared/db-errors';
 import { DEFAULT_LOCALE, Translations } from '../shared/i18n/locales';
 import {
   DeepPartial,
@@ -6,7 +7,6 @@ import {
   FindOptionsWhere,
   Not,
   QueryDeepPartialEntity,
-  QueryFailedError,
   Repository,
 } from 'typeorm';
 
@@ -16,23 +16,6 @@ export interface ReferenceRow {
   name: string;
   translations: Translations;
   isActive: boolean;
-}
-
-/** True for PostgreSQL's unique-constraint violation. */
-export const isUniqueViolation = (error: unknown): boolean =>
-  error instanceof QueryFailedError &&
-  (error.driverError as { code?: string }).code === '23505';
-
-export const violatedTable = (error: unknown): string | undefined =>
-  error instanceof QueryFailedError
-    ? (error.driverError as { table?: string }).table
-    : undefined;
-
-export function rethrowAsConflict(error: unknown, message: string): never {
-  if (isUniqueViolation(error)) {
-    throw new ConflictException(message);
-  }
-  throw error;
 }
 
 export abstract class ReferenceService<T extends ReferenceRow> {

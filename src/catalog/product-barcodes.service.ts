@@ -10,7 +10,7 @@ import { hasValidCheckDigit, isInternalShape, isValidEan13 } from './barcode';
 import { BarcodeType, ProductBarcode } from './entities/product-barcode.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductVariantsService } from './product-variants.service';
-import { isUniqueViolation } from './reference.service';
+import { isUniqueViolation } from '../shared/db-errors';
 
 /** Scanners add whitespace and Enter, and case must not matter. Nothing else. */
 export const normalizeCode = (raw: string): string => raw.trim().toUpperCase();

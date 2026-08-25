@@ -9,7 +9,7 @@ import { DEFAULT_LOCALE, Translations } from '../shared/i18n/locales';
 import { Brand } from './entities/brand.entity';
 import { ProductCategory } from './entities/product-category.entity';
 import { Product } from './entities/product.entity';
-import { rethrowAsConflict } from './reference.service';
+import { rethrowAsConflict } from '../shared/db-errors';
 
 export interface ProductFilter {
   includeInactive?: boolean;

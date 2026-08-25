@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, FindOptionsWhere, Not, Repository } from 'typeorm';
 import { Brand } from './entities/brand.entity';
-import { rethrowAsConflict } from './reference.service';
+import { rethrowAsConflict } from '../shared/db-errors';
 
 @Injectable()
 export class BrandsService {
