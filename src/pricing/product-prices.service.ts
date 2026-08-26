@@ -18,7 +18,7 @@ export interface CreatePriceInput {
   currency: Currency;
   price: number;
   date: string;
-  cost?: number | null;
+  cost: number;
   note?: string | null;
 }
 
@@ -70,10 +70,9 @@ export class ProductPricesService {
   ): Promise<ProductPrice> {
     const date = dto.date;
     await this.requireVariant(dto.variantId);
-    const rate = await this.rates.findEffective(date);
 
     const price = round2(dto.price);
-    const cost = dto.cost == null ? null : round2(dto.cost);
+    const cost = round2(dto.cost);
     const markup = computeMarkup(price, cost);
 
     return this.repo.save(
@@ -82,8 +81,8 @@ export class ProductPricesService {
         date,
         currency: dto.currency,
         price: price.toFixed(2),
-        rate: rate.rate,
-        cost: cost === null ? null : cost.toFixed(2),
+        rate: await this.rateOn(date),
+        cost: cost.toFixed(2),
         markupFixed: markup.fixed === null ? null : markup.fixed.toFixed(2),
         markupPercent:
           markup.percent === null ? null : markup.percent.toFixed(2),
@@ -91,6 +90,17 @@ export class ProductPricesService {
         createdBy,
       }),
     );
+  }
+
+  private async rateOn(date: string): Promise<string | null> {
+    try {
+      return (await this.rates.findEffective(date)).rate;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   private currentPrices(asOf: string): Promise<ProductPrice[]> {
