@@ -14,6 +14,11 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    // Listening once, explicitly. Left to itself supertest opens and closes an
+    // ephemeral server per request, and across a few hundred requests one of
+    // them lands on a socket that is already closing — which surfaces as
+    // "Parse Error: Expected HTTP/" on an unrelated test.
+    await app.listen(0);
   });
 
   it('/ (GET)', () => {

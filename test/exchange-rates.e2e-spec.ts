@@ -48,6 +48,11 @@ describe('ExchangeRates (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ZodValidationPipe());
     await app.init();
+    // Listening once, explicitly. Left to itself supertest opens and closes an
+    // ephemeral server per request, and across a few hundred requests one of
+    // them lands on a socket that is already closing — which surfaces as
+    // "Parse Error: Expected HTTP/" on an unrelated test.
+    await app.listen(0);
     http = app.getHttpServer();
 
     await clean();
@@ -82,6 +87,23 @@ describe('ExchangeRates (e2e)', () => {
         .post('/api/exchange-rates')
         .send({ date: DATE, rate: 12700 })
         .expect(409);
+    });
+
+    it('answers 409, never 500, when several writers pick the same day at once', async () => {
+      // `existsBy` then `save` is not atomic: the CBU job and a person entering
+      // the morning rate can both pass the check. The loser must meet the same
+      // 409 the sequential path gives, not an unhandled 23505.
+      const all = await Promise.all(
+        Array.from({ length: 8 }, (_, i) =>
+          request(http)
+            .post('/api/exchange-rates')
+            .send({ date: '2099-06-01', rate: 12800 + i }),
+        ),
+      );
+
+      const statuses = all.map((r) => r.status);
+      expect(statuses.filter((s) => s === 201)).toHaveLength(1);
+      expect(statuses.filter((s) => s === 409)).toHaveLength(7);
     });
 
     it('refuses a client-declared source', async () => {

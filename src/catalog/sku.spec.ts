@@ -62,17 +62,15 @@ describe('buildSku', () => {
 });
 
 describe('uniqueSku', () => {
-  it('returns the base when nothing holds it', async () => {
-    await expect(
-      uniqueSku('KOY01-M-QORA', () => Promise.resolve(false)),
-    ).resolves.toBe('KOY01-M-QORA');
+  it('returns the base when nothing holds it', () => {
+    expect(uniqueSku('KOY01-M-QORA', () => false)).toBe('KOY01-M-QORA');
   });
 
-  it('suffixes past the taken ones', async () => {
+  it('suffixes past the taken ones', () => {
     const taken = new Set(['KOY01-M-QORA', 'KOY01-M-QORA-2']);
 
-    await expect(
-      uniqueSku('KOY01-M-QORA', (c) => Promise.resolve(taken.has(c))),
-    ).resolves.toBe('KOY01-M-QORA-3');
+    expect(uniqueSku('KOY01-M-QORA', (c) => taken.has(c))).toBe(
+      'KOY01-M-QORA-3',
+    );
   });
 });

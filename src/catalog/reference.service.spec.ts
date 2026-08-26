@@ -1,10 +1,7 @@
 import { ConflictException } from '@nestjs/common';
 import { QueryFailedError, Repository } from 'typeorm';
-import {
-  isUniqueViolation,
-  ReferenceRow,
-  ReferenceService,
-} from './reference.service';
+import { isUniqueViolation } from '../shared/db-errors';
+import { ReferenceRow, ReferenceService } from './reference.service';
 
 type RepoMock = {
   find: jest.Mock;
