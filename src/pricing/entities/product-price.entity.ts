@@ -32,10 +32,10 @@ export class ProductPrice {
   currency!: Currency;
 
   @Column({ type: 'numeric', precision: 14, scale: 2, nullable: true })
-  rate!: string;
+  rate!: string | null;
 
   @Column({ type: 'numeric', precision: 14, scale: 2 })
-  cost!: string | null;
+  cost!: string;
 
   @Column({ type: 'numeric', precision: 14, scale: 2 })
   price!: string;

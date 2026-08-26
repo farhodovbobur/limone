@@ -14,7 +14,7 @@ export const createProductPriceSchema = z.object({
   currency: z.enum([Currency.UZS, Currency.USD]),
   price: productPriceFields.money,
   date: productPriceFields.date,
-  cost: productPriceFields.money.nullish(),
+  cost: productPriceFields.money,
   note: productPriceFields.note.nullish(),
 })
   .strict();
