@@ -1,15 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductVariant } from '../catalog/entities/product-variant.entity';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { Currency } from '../shared/enums/currency.enum';
 import { round2 } from '../shared/money';
-import { productPriceFields } from './dto/product-price.dto';
 import { ProductPrice } from './entities/product-price.entity';
 import { computeMarkup } from './markup';
 
@@ -37,8 +32,7 @@ export class ProductPricesService {
     private readonly rates: ExchangeRatesService,
   ) {}
 
-  async list(asOf?: unknown, productId?: number): Promise<PriceListRow[]> {
-    const date = this.resolveDate(asOf);
+  async list(asOf: string, productId?: number): Promise<PriceListRow[]> {
     const where = productId === undefined ? {} : { productId };
     const [variants, prices] = await Promise.all([
       this.variants.find({
@@ -46,7 +40,7 @@ export class ProductPricesService {
         relations: { product: true, size: true, color: true, color2: true },
         order: { product: { name: 'ASC' }, size: { sortOrder: 'ASC' } },
       }),
-      this.currentPrices(date),
+      this.currentPrices(asOf, productId),
     ]);
 
     const byVariant = new Map(prices.map((p) => [p.variantId, p]));
@@ -103,27 +97,24 @@ export class ProductPricesService {
     }
   }
 
-  private currentPrices(asOf: string): Promise<ProductPrice[]> {
-    return this.repo
+  private currentPrices(
+    asOf: string,
+    productId?: number,
+  ): Promise<ProductPrice[]> {
+    const qb = this.repo
       .createQueryBuilder('p')
       .distinctOn(['p.variantId'])
       .where('p.date <= :asOf', { asOf })
       .orderBy('p.variantId', 'ASC')
       .addOrderBy('p.date', 'DESC')
-      .addOrderBy('p.id', 'DESC')
-      .getMany();
-  }
+      .addOrderBy('p.id', 'DESC');
 
-  private resolveDate(asOf: unknown): string {
-    if (
-      typeof asOf !== 'string' ||
-      !productPriceFields.date.safeParse(asOf).success
-    ) {
-      throw new BadRequestException(
-        'date is required and must be a calendar date, YYYY-MM-DD',
-      );
+    if (productId !== undefined) {
+      qb.innerJoin('p.variant', 'v').andWhere('v.product_id = :productId', {
+        productId,
+      });
     }
-    return asOf;
+    return qb.getMany();
   }
 
   private async requireVariant(id: number): Promise<void> {

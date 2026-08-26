@@ -19,4 +19,11 @@ export const createProductPriceSchema = z.object({
 })
   .strict();
 
+export const priceQuerySchema = z.object({
+  date: productPriceFields.date,
+  productId: z.coerce.number().int().positive().optional(),
+})
+  .strict();
+
 export class CreateProductPriceDto extends createZodDto(createProductPriceSchema) {}
+export class PriceQueryDto extends createZodDto(priceQuerySchema) {}

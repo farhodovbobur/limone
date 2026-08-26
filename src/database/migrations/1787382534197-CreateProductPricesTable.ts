@@ -14,7 +14,7 @@ export class CreateProductPricesTable1787382534197 implements MigrationInterface
           "cost" numeric(14,2) NOT NULL,
           "price" numeric(14,2) NOT NULL,
           "markup_fixed" numeric(14,2),
-          "markup_percent" numeric(7,2),
+          "markup_percent" numeric,
           "note" text,
           "created_by" integer NOT NULL,
           "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

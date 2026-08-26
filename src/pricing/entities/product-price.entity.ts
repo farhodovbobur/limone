@@ -50,14 +50,7 @@ export class ProductPrice {
   })
   markupFixed!: string | null;
 
-  /** Cache: `(price / cost − 1) × 100`. Negative below cost. */
-  @Column({
-    name: 'markup_percent',
-    type: 'numeric',
-    precision: 7,
-    scale: 2,
-    nullable: true,
-  })
+  @Column({ name: 'markup_percent', type: 'numeric', nullable: true })
   markupPercent!: string | null;
 
   @Column({ type: 'text', nullable: true })

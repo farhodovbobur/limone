@@ -8,7 +8,8 @@ export interface Money {
 
 export const roundTo = (value: number, decimals: number): number => {
   const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
+  const rounded = Math.round(Math.abs(value) * factor * (1 + Number.EPSILON)) / factor;
+  return value < 0 ? -rounded : rounded;
 };
 
 export const round2 = (value: number): number => roundTo(value, 2);
