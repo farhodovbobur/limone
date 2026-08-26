@@ -8,6 +8,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CatalogModule } from './catalog/catalog.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
+import { PricingModule } from './pricing/pricing.module';
+import { WarehouseModule } from './warehouse/warehouse.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 
@@ -35,6 +37,8 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     CatalogModule,
     ExchangeRatesModule,
+    PricingModule,
+    WarehouseModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
