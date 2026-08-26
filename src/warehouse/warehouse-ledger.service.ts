@@ -40,6 +40,12 @@ export interface PostedDocument {
   replayed: boolean;
 }
 
+const fingerprint = (lines: MovementLine[]): string =>
+  lines
+    .map((l) => `${l.variantId}:${l.qty}`)
+    .sort()
+    .join('|');
+
 @Injectable()
 export class WarehouseLedgerService {
   constructor(
@@ -54,47 +60,59 @@ export class WarehouseLedgerService {
     em?: EntityManager,
   ): Promise<PostedDocument> {
     if (em) {
-      return this.write(em, input, createdBy);
-    }
-    if (input.clientRef) {
-      const replay = await this.replay(input);
-      if (replay) {
-        return replay;
-      }
+      return this.writeOnce(em, input, createdBy);
     }
 
     try {
       return await this.dataSource.transaction((tx) =>
-        this.write(tx, input, createdBy),
+        this.writeOnce(tx, input, createdBy),
       );
     } catch (error) {
       if (input.clientRef && isUniqueViolation(error)) {
-        const replay = await this.replay(input);
-        if (replay) {
-          return replay;
+        const replayed = await this.replay(this.documents.manager, input);
+        if (replayed) {
+          return replayed;
         }
       }
       throw error;
     }
   }
 
-  private async replay(input: PostInput): Promise<PostedDocument | null> {
-    const existing = await this.documents.findOne({
+  private async writeOnce(
+    em: EntityManager,
+    input: PostInput,
+    createdBy: number,
+  ): Promise<PostedDocument> {
+    if (input.clientRef) {
+      const replayed = await this.replay(em, input);
+      if (replayed) {
+        return replayed;
+      }
+    }
+    return this.write(em, input, createdBy);
+  }
+
+  async replay(
+    em: EntityManager,
+    input: PostInput,
+  ): Promise<PostedDocument | null> {
+    const existing = await em.findOne(WarehouseProductDocument, {
       where: { clientRef: input.clientRef! },
     });
     if (!existing) {
       return null;
     }
-    if (existing.type !== input.type) {
+    const movements = await this.movementsOf(em, existing.id);
+    if (
+      existing.type !== input.type ||
+      existing.date !== input.date ||
+      fingerprint(movements) !== fingerprint(input.lines)
+    ) {
       throw new ConflictException(
-        `Reference ${input.clientRef} already belongs to ${existing.number}`,
+        `Reference ${input.clientRef} already belongs to ${existing.number}, which is not this document`,
       );
     }
-    return {
-      document: existing,
-      movements: await this.movementsOf(existing.id),
-      replayed: true,
-    };
+    return { document: existing, movements, replayed: true };
   }
 
   private async write(
@@ -107,7 +125,10 @@ export class WarehouseLedgerService {
       input.lines.map((l) => l.variantId),
     );
 
-    const balances = await this.loadBalances(em, input.lines);
+    const balances = await this.balancesOf(
+      em,
+      input.lines.map((l) => l.variantId),
+    );
     this.assertNoNegativeStock(input.lines, balances);
 
     const document = await em.save(
@@ -144,9 +165,6 @@ export class WarehouseLedgerService {
   }
 
   async lockVariants(em: EntityManager, variantIds: number[]): Promise<void> {
-    await em.query('SELECT pg_advisory_xact_lock_shared($1, 0)', [
-      LOCK_NAMESPACE,
-    ]);
     const ids = [...new Set(variantIds)].sort((a, b) => a - b);
     for (const id of ids) {
       await em.query('SELECT pg_advisory_xact_lock($1, $2)', [
@@ -181,11 +199,11 @@ export class WarehouseLedgerService {
     }
   }
 
-  private async loadBalances(
+  async balancesOf(
     em: EntityManager,
-    lines: MovementLine[],
+    variantIds: number[],
   ): Promise<Map<number, number>> {
-    const ids = [...new Set(lines.map((l) => l.variantId))];
+    const ids = [...new Set(variantIds)];
     const rows = await em
       .createQueryBuilder(WarehouseProductBalance, 'b')
       .where('b.variant_id IN (:...ids)', { ids })
@@ -197,13 +215,22 @@ export class WarehouseLedgerService {
     em: EntityManager,
     balances: Map<number, number>,
   ): Promise<void> {
-    const rows = [...balances].map(([variantId, qty]) => ({ variantId, qty }));
+    const updatedAt = new Date();
+    const rows = [...balances].map(([variantId, qty]) => ({
+      variantId,
+      qty,
+      updatedAt,
+    }));
     await em.upsert(WarehouseProductBalance, rows, ['variantId']);
   }
 
-  private movementsOf(documentId: number): Promise<WarehouseProductMovement[]> {
-    return this.dataSource
-      .getRepository(WarehouseProductMovement)
-      .find({ where: { documentId }, order: { id: 'ASC' } });
+  private movementsOf(
+    em: EntityManager,
+    documentId: number,
+  ): Promise<WarehouseProductMovement[]> {
+    return em.find(WarehouseProductMovement, {
+      where: { documentId },
+      order: { id: 'ASC' },
+    });
   }
 }

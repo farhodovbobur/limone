@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { rethrowAsConflict } from '../shared/db-errors';
 import { ProductVariant } from '../catalog/entities/product-variant.entity';
 import { WarehouseProductBalance } from './entities/warehouse-product-balance.entity';
@@ -109,52 +109,46 @@ export class WarehouseProductService {
     },
     createdBy: number,
   ): Promise<PostedDocument | null> {
-    await this.requireVariants(dto.lines.map((l) => l.variantId));
+    const variantIds = dto.lines.map((l) => l.variantId);
+    await this.requireVariants(variantIds);
 
-    return this.dataSource.transaction(async (em) => {
-      await this.ledger.lockVariants(
-        em,
-        dto.lines.map((l) => l.variantId),
-      );
-      const current = await this.currentBalances(
-        em,
-        dto.lines.map((l) => l.variantId),
-      );
+    try {
+      return await this.dataSource.transaction(async (em) => {
+        await this.ledger.lockVariants(em, variantIds);
+        const current = await this.ledger.balancesOf(em, variantIds);
 
-      const lines = dto.lines
-        .map((l) => ({
-          variantId: l.variantId,
-          qty: l.countedQty - (current.get(l.variantId) ?? 0),
-        }))
-        .filter((l) => l.qty !== 0);
+        const lines = dto.lines
+          .map((l) => ({
+            variantId: l.variantId,
+            qty: l.countedQty - (current.get(l.variantId) ?? 0),
+          }))
+          .filter((l) => l.qty !== 0);
 
-      if (!lines.length) {
-        return null;
+        if (!lines.length) {
+          return null;
+        }
+
+        return this.ledger.post(
+          {
+            type: DocumentType.ADJUSTMENT,
+            date: dto.date,
+            clientRef: dto.clientRef,
+            note: dto.note,
+            lines,
+          },
+          createdBy,
+          em,
+        );
+      });
+    } catch (error) {
+      if (dto.clientRef) {
+        rethrowAsConflict(
+          error,
+          `Reference ${dto.clientRef} already belongs to another document`,
+        );
       }
-
-      return this.ledger.post(
-        {
-          type: DocumentType.ADJUSTMENT,
-          date: dto.date,
-          clientRef: dto.clientRef,
-          note: dto.note,
-          lines,
-        },
-        createdBy,
-        em,
-      );
-    });
-  }
-
-  private async currentBalances(
-    em: EntityManager,
-    variantIds: number[],
-  ): Promise<Map<number, number>> {
-    const rows = await em
-      .createQueryBuilder(WarehouseProductBalance, 'b')
-      .where('b.variant_id IN (:...ids)', { ids: [...new Set(variantIds)] })
-      .getMany();
-    return new Map(rows.map((r) => [r.variantId, r.qty]));
+      throw error;
+    }
   }
 
   async reverse(

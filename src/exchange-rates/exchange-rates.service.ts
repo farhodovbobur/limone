@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
+import { rethrowAsConflict } from '../shared/db-errors';
 import { exchangeRateFields } from './dto/exchange-rate.dto';
 import { ExchangeRate, RateSource } from './entities/exchange-rate.entity';
 
@@ -52,13 +53,17 @@ export class ExchangeRatesService {
     if (await this.repo.existsBy({ date: dto.date })) {
       throw new ConflictException(`A rate for ${dto.date} already exists`);
     }
-    return this.repo.save(
-      this.repo.create({
-        date: dto.date,
-        rate: String(dto.rate),
-        source,
-      }),
-    );
+    try {
+      return await this.repo.save(
+        this.repo.create({
+          date: dto.date,
+          rate: String(dto.rate),
+          source,
+        }),
+      );
+    } catch (error) {
+      rethrowAsConflict(error, `A rate for ${dto.date} already exists`);
+    }
   }
 
   async update(id: number, dto: { rate: number }): Promise<ExchangeRate> {

@@ -42,20 +42,16 @@ export function buildSku(parts: SkuParts): string {
   return tokens.filter(Boolean).join('-');
 }
 
-/**
- * Truncation can make two different variants collide, so the caller supplies a
- * "is this taken?" probe and the base gets `-2`, `-3`… until it is free.
- */
-export async function uniqueSku(
+export function uniqueSku(
   base: string,
-  isTaken: (candidate: string) => Promise<boolean>,
-): Promise<string> {
-  if (!(await isTaken(base))) {
+  isTaken: (candidate: string) => boolean,
+): string {
+  if (!isTaken(base)) {
     return base;
   }
   for (let n = 2; n < 1000; n += 1) {
     const candidate = `${base}-${n}`;
-    if (!(await isTaken(candidate))) {
+    if (!isTaken(candidate)) {
       return candidate;
     }
   }
